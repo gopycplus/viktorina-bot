@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"log"
+	"net/http"
+	"os"
 	"strconv"
 	"strings"
 
@@ -70,7 +72,11 @@ func main() {
 
 	go HistoryBot()
 
-	updates, _ := bot.GetUpdatesChan(u)
+	// updates, _ := bot.GetUpdatesChan(u)
+	_, err = bot.SetWebhook(tgbotapi.NewWebhook("https://cosmic-faloodeh-4f67bb.netlify.app/" + bot.Token))
+	utils.Check(err)
+	updates := bot.ListenForWebhook("/" + bot.Token)
+	go http.ListenAndServe(":"+os.Getenv("PORT"), nil)
 
 	for update := range updates {
 		if update.Message == nil {
@@ -325,16 +331,16 @@ func HistoryBot() {
 
 	// Localniy run qilish uchun pastdagi 4 ta qatorni kommmentdan chiqarish kerak
 
-	u := tgbotapi.NewUpdate(0)
-	u.Timeout = 60
-	updates, _ := bot.GetUpdatesChan(u)
+	// u := tgbotapi.NewUpdate(0)
+	// u.Timeout = 60
+	// updates, _ := bot.GetUpdatesChan(u)
 
 	// Herokuda run qilish uchun pastdagi 4 ta qatorni kommentdan chiqarish kerak
 
-	// _, err = bot.SetWebhook(tgbotapi.NewWebhook("https://tarixviktorinabot.herokuapp.com/" + bot.Token))
-	// utils.Check(err)
-	// updates := bot.ListenForWebhook("/" + bot.Token)
-	// go http.ListenAndServe(":"+os.Getenv("PORT"), nil)
+	_, err = bot.SetWebhook(tgbotapi.NewWebhook("https://quiet-chimera-a017e2.netlify.app" + bot.Token))
+	utils.Check(err)
+	updates := bot.ListenForWebhook("/" + bot.Token)
+	go http.ListenAndServe(":"+os.Getenv("PORT"), nil)
 
 	for update := range updates {
 		if update.CallbackQuery != nil {
