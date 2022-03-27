@@ -1,14 +1,15 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
+	"github.com/joho/godotenv"
 	"github.com/shavkatjon/viktorina_bot_player/model"
 	"github.com/shavkatjon/viktorina_bot_player/storage"
 	"github.com/shavkatjon/viktorina_bot_player/utils"
@@ -29,13 +30,6 @@ var subject = tgbotapi.NewReplyKeyboard(
 
 func main() {
 
-	port := flag.Int("port", -1, "specify a port to use http rather than AWS Lambda")
-	flag.Parse()
-	portStr := ""
-	if *port != -1 {
-		portStr = fmt.Sprintf(":%d", *port)
-	}
-
 	var stop = tgbotapi.NewReplyKeyboard(
 		tgbotapi.NewKeyboardButtonRow(
 			tgbotapi.NewKeyboardButton("Viktorinani to'xtatish⏹️"),
@@ -50,7 +44,10 @@ func main() {
 		),
 	)
 
-	bot, err := tgbotapi.NewBotAPI("5286492249:AAEGJCwMus-n4czo0L8aDVB0evpP-Uj6vYg")
+	e := godotenv.Load()
+	utils.Check(e)
+
+	bot, err := tgbotapi.NewBotAPI(os.Getenv("TELEGRAM_TOKEN2"))
 	if err != nil {
 		log.Panic(err)
 	}
@@ -77,15 +74,15 @@ func main() {
 		fmt.Println("Not connected to db")
 	}
 
-	go HistoryBot(portStr)
+	go HistoryBot()
 
 	// updates, _ := bot.GetUpdatesChan(u)
 	_, err = bot.RemoveWebhook()
 	utils.Check(err)
-	_, err = bot.SetWebhook(tgbotapi.NewWebhook("https://golden-flan-8d1100.netlify.app/" + bot.Token))
+	_, err = bot.SetWebhook(tgbotapi.NewWebhook("https://tarixviktorinabot.herokuapp.com" + bot.Token))
 	utils.Check(err)
 	updates := bot.ListenForWebhook("/" + bot.Token)
-	go http.ListenAndServe(portStr, nil)
+	go http.ListenAndServe(":"+os.Getenv("PORT"), nil)
 
 	for update := range updates {
 		if update.Message == nil {
@@ -312,7 +309,7 @@ func main() {
 	}
 }
 
-func HistoryBot(portStr string) {
+func HistoryBot() {
 	// Buttons
 	defaultMenuKeyboard := tgbotapi.NewReplyKeyboard(
 		tgbotapi.NewKeyboardButtonRow(
@@ -329,10 +326,11 @@ func HistoryBot(portStr string) {
 		),
 	)
 
-	token := "5130421900:AAHFUfyQ8h1fEUmmwTyzetHJsHjmgf_l6Ag"
+	e := godotenv.Load()
+	utils.Check(e)
 
 	// Initialize bot
-	bot, err := tgbotapi.NewBotAPI(token)
+	bot, err := tgbotapi.NewBotAPI(os.Getenv("TELEGRAM_TOKEN"))
 	utils.Check(err)
 
 	bot.Debug = true
@@ -348,10 +346,10 @@ func HistoryBot(portStr string) {
 
 	_, err = bot.RemoveWebhook()
 	utils.Check(err)
-	_, err = bot.SetWebhook(tgbotapi.NewWebhook("https://golden-flan-8d1100.netlify.app/" + bot.Token))
+	_, err = bot.SetWebhook(tgbotapi.NewWebhook("https://tarixviktorinabot.herokuapp.com" + bot.Token))
 	utils.Check(err)
 	updates := bot.ListenForWebhook("/" + bot.Token)
-	go http.ListenAndServe(portStr, nil)
+	go http.ListenAndServe(":"+os.Getenv("PORT"), nil)
 
 	for update := range updates {
 		if update.CallbackQuery != nil {
