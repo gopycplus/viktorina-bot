@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 	"strconv"
 	"strings"
 
@@ -76,7 +75,7 @@ func main() {
 	_, err = bot.SetWebhook(tgbotapi.NewWebhook("https://cosmic-faloodeh-4f67bb.netlify.app/" + bot.Token))
 	utils.Check(err)
 	updates := bot.ListenForWebhook("/" + bot.Token)
-	go http.ListenAndServe(":"+os.Getenv("PORT"), nil)
+	go http.ListenAndServe(":8000", nil)
 
 	for update := range updates {
 		if update.Message == nil {
@@ -337,10 +336,10 @@ func HistoryBot() {
 
 	// Herokuda run qilish uchun pastdagi 4 ta qatorni kommentdan chiqarish kerak
 
-	_, err = bot.SetWebhook(tgbotapi.NewWebhook("https://quiet-chimera-a017e2.netlify.app" + bot.Token))
+	_, err = bot.SetWebhook(tgbotapi.NewWebhook("https://quiet-chimera-a017e2.netlify.app/" + bot.Token))
 	utils.Check(err)
 	updates := bot.ListenForWebhook("/" + bot.Token)
-	go http.ListenAndServe(":"+os.Getenv("PORT"), nil)
+	go http.ListenAndServe(":8000", nil)
 
 	for update := range updates {
 		if update.CallbackQuery != nil {
