@@ -9,5 +9,5 @@
 
 [[redirects]]
   from = "/public/*"
-  to = "/.netlify/functions/viktorina-bot-player/:splat"
+  to = "/.netlify/functions/viktorina-bot-player/"
   status = 200

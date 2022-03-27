@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"net/http"
@@ -28,6 +29,13 @@ var subject = tgbotapi.NewReplyKeyboard(
 
 func main() {
 
+	port := flag.Int("port", -1, "specify a port to use http rather than AWS Lambda")
+	flag.Parse()
+	portStr := ""
+	if *port != -1 {
+		portStr = fmt.Sprintf(":%d", *port)
+	}
+
 	var stop = tgbotapi.NewReplyKeyboard(
 		tgbotapi.NewKeyboardButtonRow(
 			tgbotapi.NewKeyboardButton("Viktorinani to'xtatish⏹️"),
@@ -51,8 +59,8 @@ func main() {
 
 	log.Printf("Authorized on account %s", bot.Self.UserName)
 
-	u := tgbotapi.NewUpdate(0)
-	u.Timeout = 60
+	// u := tgbotapi.NewUpdate(0)
+	// u.Timeout = 60
 
 	dbConn := storage.ConnectGameDb()
 	if dbConn {
@@ -69,13 +77,15 @@ func main() {
 		fmt.Println("Not connected to db")
 	}
 
-	go HistoryBot()
+	go HistoryBot(portStr)
 
 	// updates, _ := bot.GetUpdatesChan(u)
-	_, err = bot.SetWebhook(tgbotapi.NewWebhook("https://cosmic-faloodeh-4f67bb.netlify.app/" + bot.Token))
+	_, err = bot.RemoveWebhook()
+	utils.Check(err)
+	_, err = bot.SetWebhook(tgbotapi.NewWebhook("https://golden-flan-8d1100.netlify.app/" + bot.Token))
 	utils.Check(err)
 	updates := bot.ListenForWebhook("/" + bot.Token)
-	go http.ListenAndServe(":8000", nil)
+	go http.ListenAndServe(portStr, nil)
 
 	for update := range updates {
 		if update.Message == nil {
@@ -302,7 +312,7 @@ func main() {
 	}
 }
 
-func HistoryBot() {
+func HistoryBot(portStr string) {
 	// Buttons
 	defaultMenuKeyboard := tgbotapi.NewReplyKeyboard(
 		tgbotapi.NewKeyboardButtonRow(
@@ -336,10 +346,12 @@ func HistoryBot() {
 
 	// Herokuda run qilish uchun pastdagi 4 ta qatorni kommentdan chiqarish kerak
 
-	_, err = bot.SetWebhook(tgbotapi.NewWebhook("https://quiet-chimera-a017e2.netlify.app/" + bot.Token))
+	_, err = bot.RemoveWebhook()
+	utils.Check(err)
+	_, err = bot.SetWebhook(tgbotapi.NewWebhook("https://golden-flan-8d1100.netlify.app/" + bot.Token))
 	utils.Check(err)
 	updates := bot.ListenForWebhook("/" + bot.Token)
-	go http.ListenAndServe(":8000", nil)
+	go http.ListenAndServe(portStr, nil)
 
 	for update := range updates {
 		if update.CallbackQuery != nil {
