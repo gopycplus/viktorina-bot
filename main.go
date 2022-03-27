@@ -54,7 +54,7 @@ func main() {
 
 	bot.Debug = true
 
-	log.Printf("Authorized on account %s", bot.Self.UserName)
+	log.Printf("Authorized  on account %s", bot.Self.UserName)
 
 	// u := tgbotapi.NewUpdate(0)
 	// u.Timeout = 60
@@ -332,7 +332,7 @@ func HistoryBot() {
 	utils.Check(err)
 
 	bot.Debug = true
-	fmt.Println("Authorized on account", bot.Self.UserName)
+	fmt.Println("Authorized   on account", bot.Self.UserName)
 
 	// Localniy run qilish uchun pastdagi 4 ta qatorni kommmentdan chiqarish kerak
 
