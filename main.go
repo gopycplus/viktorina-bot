@@ -97,7 +97,7 @@ func main() {
 			user.Step++
 
 			msg := tgbotapi.NewMessage(user.ChatId,
-				"Assalomu alaykum "+user.FirstName+" "+user.LastName+", tarixdan viktorina botga xush kelibsiz!")
+				"Assalomu Alaykum, "+user.FirstName+" "+user.LastName+"!\nViktorina botga xush kelibsiz!")
 			msg.ReplyMarkup = groupMenuKeyboard
 			m, _ := bot.Send(msg)
 
@@ -463,7 +463,7 @@ func HistoryBot() {
 			user.Step++
 
 			msg := tgbotapi.NewMessage(user.ChatId,
-				"Assalomu alaykum!\n"+user.FirstName+" "+user.LastName+" tarixdan viktorina boti( @vpm_admin_bot ) uchun savollar tuzadigan botga xush kelibsiz!")
+				"Assalomu Alaykum, "+user.FirstName+" "+user.LastName+"!\nViktorina uchun savollar tuzadigan admin botga xush kelibsiz!")
 
 			msg.ParseMode = "html"
 			msg.ReplyMarkup = defaultMenuKeyboard
