@@ -463,7 +463,7 @@ func HistoryBot() {
 			user.Step++
 
 			msg := tgbotapi.NewMessage(user.ChatId,
-				"Assalomu alaykum!\n"+user.FirstName+" "+user.LastName+" tarixdan viktorina boti( @tarixviktorina_bot ) uchun savollar tuzadigan botga xush kelibsiz!")
+				"Assalomu alaykum!\n"+user.FirstName+" "+user.LastName+" tarixdan viktorina boti( @vpm_admin_bot ) uchun savollar tuzadigan botga xush kelibsiz!")
 
 			msg.ParseMode = "html"
 			msg.ReplyMarkup = defaultMenuKeyboard
