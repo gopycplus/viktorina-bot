@@ -3,7 +3,7 @@ package utils
 import (
 	"strconv"
 
-	"github.com/shavkatjon/viktorina_bot_player/model"
+	"github.com/shavkatjon/viktorina-bot/model"
 )
 
 func GameListToText(uList []model.GameUser) string {

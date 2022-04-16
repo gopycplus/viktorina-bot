@@ -3,16 +3,15 @@ package main
 import (
 	"fmt"
 	"log"
-	"net/http"
 	"os"
 	"strconv"
 	"strings"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/joho/godotenv"
-	"github.com/shavkatjon/viktorina_bot_player/model"
-	"github.com/shavkatjon/viktorina_bot_player/storage"
-	"github.com/shavkatjon/viktorina_bot_player/utils"
+	"github.com/shavkatjon/viktorina-bot/model"
+	"github.com/shavkatjon/viktorina-bot/storage"
+	"github.com/shavkatjon/viktorina-bot/utils"
 )
 
 var subject = tgbotapi.NewReplyKeyboard(
@@ -56,8 +55,8 @@ func main() {
 
 	log.Printf("Authorized  on account %s", bot.Self.UserName)
 
-	// u := tgbotapi.NewUpdate(0)
-	// u.Timeout = 60
+	u := tgbotapi.NewUpdate(0)
+	u.Timeout = 60
 
 	dbConn := storage.ConnectGameDb()
 	if dbConn {
@@ -76,11 +75,16 @@ func main() {
 
 	go HistoryBot()
 
-	// updates, _ := bot.GetUpdatesChan(u)
-	_, err = bot.SetWebhook(tgbotapi.NewWebhook("https://tarixviktorinabot.herokuapp.com/" + bot.Token))
-	utils.Check(err)
-	updates := bot.ListenForWebhook("/" + bot.Token)
-	go http.ListenAndServe(":"+os.Getenv("PORT"), nil)
+	_, err = bot.RemoveWebhook()
+	if err != nil {
+		panic(err)
+	}
+
+	updates, _ := bot.GetUpdatesChan(u)
+	// _, err = bot.SetWebhook(tgbotapi.NewWebhook("https://tarixviktorinabot.herokuapp.com/" + bot.Token))
+	// utils.Check(err)
+	// updates := bot.ListenForWebhook("/" + bot.Token)
+	// go http.ListenAndServe(":"+os.Getenv("PORT"), nil)
 
 	for update := range updates {
 		if update.Message == nil {
@@ -336,16 +340,21 @@ func HistoryBot() {
 
 	// Localniy run qilish uchun pastdagi 4 ta qatorni kommmentdan chiqarish kerak
 
-	// u := tgbotapi.NewUpdate(0)
-	// u.Timeout = 60
-	// updates, _ := bot.GetUpdatesChan(u)
+	_, err = bot.RemoveWebhook()
+	if err != nil {
+		panic(err)
+	}
+
+	u := tgbotapi.NewUpdate(0)
+	u.Timeout = 60
+	updates, _ := bot.GetUpdatesChan(u)
 
 	// Herokuda run qilish uchun pastdagi 4 ta qatorni kommentdan chiqarish kerak
 
-	_, err = bot.SetWebhook(tgbotapi.NewWebhook("https://tarixviktorinabot.herokuapp.com/" + bot.Token))
-	utils.Check(err)
-	updates := bot.ListenForWebhook("/" + bot.Token)
-	go http.ListenAndServe(":"+os.Getenv("PORT"), nil)
+	// _, err = bot.SetWebhook(tgbotapi.NewWebhook("https://tarixviktorinabot.herokuapp.com/" + bot.Token))
+	// utils.Check(err)
+	// updates := bot.ListenForWebhook("/" + bot.Token)
+	// go http.ListenAndServe(":"+os.Getenv("PORT"), nil)
 
 	for update := range updates {
 		if update.CallbackQuery != nil {

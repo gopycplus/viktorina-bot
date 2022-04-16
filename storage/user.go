@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	_ "github.com/mattn/go-sqlite3"
-	model "github.com/shavkatjon/viktorina_bot_player/model"
-	utils "github.com/shavkatjon/viktorina_bot_player/utils"
+	model "github.com/shavkatjon/viktorina-bot/model"
+	utils "github.com/shavkatjon/viktorina-bot/utils"
 )
 
 func GameInsertUser(user model.GameUser) int64 {

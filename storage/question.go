@@ -1,8 +1,8 @@
 package storage
 
 import (
-	model "github.com/shavkatjon/viktorina_bot_player/model"
-	"github.com/shavkatjon/viktorina_bot_player/utils"
+	model "github.com/shavkatjon/viktorina-bot/model"
+	"github.com/shavkatjon/viktorina-bot/utils"
 )
 
 func GameGetQuestion(subject string) model.GameQuestion {
