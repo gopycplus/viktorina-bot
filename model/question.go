@@ -4,6 +4,7 @@ type GameQuestion struct {
 	Id      int64
 	Subject string
 	Text    string
+	Image   string
 	Answer  string
 	Status  int
 }
@@ -12,6 +13,7 @@ type Question struct {
 	Id      int64
 	Subject string
 	Text    string
+	Image   string
 	Answer  string
 	UserId  int64
 	Status  int

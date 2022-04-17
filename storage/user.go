@@ -8,6 +8,7 @@ import (
 	utils "github.com/shavkatjon/viktorina-bot/utils"
 )
 
+//game
 func GameInsertUser(user model.GameUser) int64 {
 	query := `
 		INSERT INTO users 
@@ -155,6 +156,7 @@ func GameGetUserList(Limit int64) []model.GameUser {
 	return uList
 }
 
+//history
 func InsertUser(user model.User) int64 {
 	query := `
 		INSERT INTO users 

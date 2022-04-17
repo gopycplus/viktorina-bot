@@ -23,7 +23,7 @@ func ConnectGameDb() bool {
 
 func ConnectHistoryDb() bool {
 	var err error
-	questionDb, err = sql.Open("sqlite3", "history.db")
+	questionDb, err = sql.Open("sqlite3", "qa.db")
 	if err != nil {
 		fmt.Println(err)
 		return false

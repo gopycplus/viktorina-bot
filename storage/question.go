@@ -5,11 +5,13 @@ import (
 	"github.com/shavkatjon/viktorina-bot/utils"
 )
 
+//game
 func GameGetQuestion(subject string) model.GameQuestion {
 	query := `
 		SELECT 
 			id,
 			text,
+			image,
 			answer,
 			status
 		FROM question WHERE status = 1 and subject = $1 ORDER by RANDOM() LIMIT 1;
@@ -22,6 +24,7 @@ func GameGetQuestion(subject string) model.GameQuestion {
 	err := row.Scan(
 		&question.Id,
 		&question.Text,
+		&question.Image,
 		&question.Answer,
 		&question.Status,
 	)
@@ -31,48 +34,11 @@ func GameGetQuestion(subject string) model.GameQuestion {
 	return question
 }
 
-func GameIsQuestionExists(id int64) bool {
-	query := `
-		SELECT 
-			count(*)
-		FROM question WHERE id = $1
-	`
-
-	row := questionDb.QueryRow(query, id)
-
-	var count int
-	err := row.Scan(&count)
-
-	if err != nil || count == 0 {
-		return false
-	}
-	return true
-}
-
-func GameIsExists(id int64, user_id int64) bool {
-	query := `
-		SELECT 
-			count(*)
-		FROM question WHERE id = $1 and user_id = $2
-	`
-
-	row := questionDb.QueryRow(query, id, user_id)
-
-	var count int
-	err := row.Scan(&count)
-
-	if err != nil || count == 0 {
-		return false
-	}
-	return true
-}
-
 func GameGetNumberOfQuestions(subject string) int64 {
 	query := `
 		SELECT
 		count(*) 
-		FROM question WHERE status = 1 and subject = $1
-	`
+		FROM question WHERE status = 1 and subject = $	`
 
 	row := questionDb.QueryRow(query, subject)
 
@@ -82,26 +48,42 @@ func GameGetNumberOfQuestions(subject string) int64 {
 	if err != nil {
 		return 0
 	}
+
 	return count
 }
 
+func GameGetVariant(answer string, subject string) (list []string) {
+	rows, err := questionDb.Query("select answer from question where answer != $1 and subject=$2 order by random() limit 3", answer, subject)
+	utils.Check(err)
+	var word string
+	for rows.Next() {
+		err := rows.Scan(&word)
+		utils.Check(err)
+		list = append(list, word)
+	}
+	return list
+}
+
+//history
 func InsertQuestion(question model.Question) int64 {
 	query := `
 		INSERT INTO question 
 		(
 			subject,
 			text,
+			image,
 			answer,
 			user_id,
 			status
 		)
-		VALUES ($1, $2, $3, $4, $5)
+		VALUES ($1, $2, $3, $4, $5, $6)
 	`
 
 	_, err := questionDb.Exec(
 		query,
 		question.Subject,
 		question.Text,
+		question.Image,
 		question.Answer,
 		question.UserId,
 		question.Status,
@@ -114,7 +96,7 @@ func InsertQuestion(question model.Question) int64 {
 		SELECT 
 			id 
 		FROM question 
-		WHERE status = 0 
+		WHERE status = 0
 		AND user_id = $1
 	`
 	row := questionDb.QueryRow(query, question.UserId)
@@ -128,16 +110,18 @@ func UpdateQuestion(question model.Question) {
 	query := `
 		UPDATE question SET
 			text = $1,
-			answer = $2,
-			user_id = $3,
-			status = $4,
-			subject = $5
-		WHERE id = $6
+			image = $2,
+			answer = $3,
+			user_id = $4,
+			status = $5,
+			subject = $6
+		WHERE id = $7
 	`
 
 	_, err := questionDb.Exec(
 		query,
 		question.Text,
+		question.Image,
 		question.Answer,
 		question.UserId,
 		question.Status,
@@ -169,6 +153,7 @@ func GetQuestion(id int64) model.Question {
 			id,
 			subject,
 			text,
+			image,
 			answer,
 			user_id, 
 			status
@@ -183,6 +168,7 @@ func GetQuestion(id int64) model.Question {
 		&question.Id,
 		&question.Subject,
 		&question.Text,
+		&question.Image,
 		&question.Answer,
 		&question.UserId,
 		&question.Status,
