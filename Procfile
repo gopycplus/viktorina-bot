@@ -1,1 +1,1 @@
-web: bin/viktorina_bot_player
+web: bin/viktorina_bot
