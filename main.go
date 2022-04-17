@@ -83,7 +83,7 @@ func main() {
 
 	// Herokuda run qilish uchun pastdagi 4 ta qatorni kommentdan chiqarish kerak
 
-	_, err = bot.SetWebhook(tgbotapi.NewWebhook("https://tarixviktorinabot.herokuapp.com/" + bot.Token))
+	_, err = bot.SetWebhook(tgbotapi.NewWebhook("https://pmviktorinabot.herokuapp.com/" + bot.Token))
 	utils.Check(err)
 	updates := bot.ListenForWebhook("/"+bot.Token, bot.Self.ID)
 	go http.ListenAndServe(":"+os.Getenv("PORT"), nil)
@@ -775,7 +775,7 @@ func HistoryBot() {
 
 	// Herokuda run qilish uchun pastdagi 4 ta qatorni kommentdan chiqarish kerak
 
-	_, err = bot.SetWebhook(tgbotapi.NewWebhook("https://tarixviktorinabot.herokuapp.com/" + bot.Token))
+	_, err = bot.SetWebhook(tgbotapi.NewWebhook("https://pmviktorinabot.herokuapp.com/" + bot.Token))
 	utils.Check(err)
 	updates := bot.ListenForWebhook("/"+bot.Token, bot.Self.ID)
 	go http.ListenAndServe(":"+os.Getenv("PORT"), nil)
