@@ -85,7 +85,7 @@ func main() {
 
 	_, err = bot.SetWebhook(tgbotapi.NewWebhook("https://pmviktorinabot.herokuapp.com/" + bot.Token))
 	utils.Check(err)
-	updates := bot.ListenForWebhook("/"+bot.Token, bot.Self.ID)
+	updates := bot.ListenForWebhook("/" + bot.Token)
 	go http.ListenAndServe(":"+os.Getenv("PORT"), nil)
 
 	for update := range updates {
@@ -777,7 +777,7 @@ func HistoryBot() {
 
 	_, err = bot.SetWebhook(tgbotapi.NewWebhook("https://pmviktorinabot.herokuapp.com/" + bot.Token))
 	utils.Check(err)
-	updates := bot.ListenForWebhook("/"+bot.Token, bot.Self.ID)
+	updates := bot.ListenForWebhook("/" + bot.Token)
 	go http.ListenAndServe(":"+os.Getenv("PORT"), nil)
 
 	for update := range updates {
