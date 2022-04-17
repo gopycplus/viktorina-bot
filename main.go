@@ -81,7 +81,7 @@ func main() {
 	//u.Timeout = 60
 	//updates, _ := bot.GetUpdatesChan(u)
 
-	// Herokuda run qilish uchun pastdagi 4 ta qatorni kommentdan chiqarish kerak
+	// Herokuda run qilish uchun pastdagi 4 ta qatorni kommentdan chiqarish kerak bo'ladi
 
 	_, err = bot.SetWebhook(tgbotapi.NewWebhook("https://pmviktorinabot.herokuapp.com/" + bot.Token))
 	utils.Check(err)
