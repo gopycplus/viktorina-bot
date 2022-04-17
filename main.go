@@ -77,16 +77,16 @@ func main() {
 
 	// Localniy run qilish uchun pastdagi 4 ta qatorni kommmentdan chiqarish kerak
 
-	u := tgbotapi.NewUpdate(0)
-	u.Timeout = 60
-	updates, _ := bot.GetUpdatesChan(u)
+	//u := tgbotapi.NewUpdate(0)
+	//u.Timeout = 60
+	//updates, _ := bot.GetUpdatesChan(u)
 
 	// Herokuda run qilish uchun pastdagi 4 ta qatorni kommentdan chiqarish kerak
 
-	// _, err = bot.SetWebhook(tgbotapi.NewWebhook("https://tarixviktorinabot.herokuapp.com/" + bot.Token))
-	// utils.Check(err)
-	// updates := bot.ListenForWebhook("/" + bot.Token)
-	// go http.ListenAndServe(":"+os.Getenv("PORT"), nil)
+	_, err = bot.SetWebhook(tgbotapi.NewWebhook("https://tarixviktorinabot.herokuapp.com/" + bot.Token))
+	utils.Check(err)
+	updates := bot.ListenForWebhook("/"+bot.Token, bot.Self.ID)
+	go http.ListenAndServe(":"+os.Getenv("PORT"), nil)
 
 	for update := range updates {
 		if update.CallbackQuery != nil {
@@ -769,16 +769,16 @@ func HistoryBot() {
 
 	// Localniy run qilish uchun pastdagi 4 ta qatorni kommmentdan chiqarish kerak
 
-	u := tgbotapi.NewUpdate(0)
-	u.Timeout = 60
-	updates, _ := bot.GetUpdatesChan(u)
+	//u := tgbotapi.NewUpdate(0)
+	//u.Timeout = 60
+	//updates, _ := bot.GetUpdatesChan(u)
 
 	// Herokuda run qilish uchun pastdagi 4 ta qatorni kommentdan chiqarish kerak
 
-	// _, err = bot.SetWebhook(tgbotapi.NewWebhook("https://tarixviktorinabot.herokuapp.com/" + bot.Token))
-	// utils.Check(err)
-	// updates := bot.ListenForWebhook("/" + bot.Token)
-	// go http.ListenAndServe(":"+os.Getenv("PORT"), nil)
+	_, err = bot.SetWebhook(tgbotapi.NewWebhook("https://tarixviktorinabot.herokuapp.com/" + bot.Token))
+	utils.Check(err)
+	updates := bot.ListenForWebhook("/"+bot.Token, bot.Self.ID)
+	go http.ListenAndServe(":"+os.Getenv("PORT"), nil)
 
 	for update := range updates {
 		if update.CallbackQuery != nil {
