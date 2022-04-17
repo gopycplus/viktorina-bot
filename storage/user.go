@@ -8,18 +8,19 @@ import (
 	utils "github.com/shavkatjon/viktorina-bot/utils"
 )
 
-//game
+// game.db
+
 func GameInsertUser(user model.GameUser) int64 {
 	query := `
 		INSERT INTO users 
 		(
-			chat_id,
-			first_name,
-			last_name, 
-			username,
-			step, 
-			message_id,
-			score
+			"chat_id",
+			"first_name",
+			"last_name", 
+			"username",
+			"step", 
+			"message_id",
+			"score"
 		)
 		VALUES ($1, $2, $3, $4, $5, $6, $7)
 	`
@@ -40,9 +41,9 @@ func GameInsertUser(user model.GameUser) int64 {
 
 	query = `
 		SELECT 
-			id 
+			"id" 
 		FROM users 
-		WHERE chat_id = $1
+		WHERE "chat_id" = $1
 	`
 	row := gameDb.QueryRow(query, user.ChatId)
 	err = row.Scan(&id)
@@ -55,16 +56,16 @@ func GameInsertUser(user model.GameUser) int64 {
 func GameUpdateUser(user model.GameUser) {
 	query := `
 		UPDATE users SET 
-			first_name = $1,
-			last_name = $2, 
-			username = $3,
-			step = $4, 
-			message_id = $5,
-			score = $6,
-			subject = $7,
-			question = $8,
-			answer = $9
-		WHERE chat_id = $10
+			"first_name" = $1,
+			"last_name" = $2, 
+			"username" = $3,
+			"step" = $4, 
+			"message_id" = $5,
+			"score" = $6,
+			"subject" = $7,
+			"question" = $8,
+			"answer" = $9
+		WHERE "chat_id" = $10
 	`
 
 	_, err := gameDb.Exec(
@@ -87,17 +88,17 @@ func GameUpdateUser(user model.GameUser) {
 func GameGetUser(chatId int64) model.GameUser {
 	query := `
 		SELECT 
-			chat_id,
-			first_name,
-			last_name,
-			username,
-			step,
-			message_id,
-			score,
-			subject,
-			question,
-			answer
-		FROM users WHERE chat_id = $1
+			"chat_id",
+			"first_name",
+			"last_name",
+			"username",
+			"step",
+			"message_id",
+			"score",
+			"subject",
+			"question",
+			"answer"
+		FROM users WHERE "chat_id" = $1
 	`
 
 	row := gameDb.QueryRow(query, chatId)
@@ -134,10 +135,10 @@ func GameGetUserList(Limit int64) []model.GameUser {
 
 	query := `
 		SELECT
-			first_name,
-			last_name, 
-			score
-		FROM users ORDER BY score DESC LIMIT $1
+			"first_name",
+			"last_name", 
+			"score"
+		FROM users ORDER BY "score" DESC LIMIT $1
 	`
 	rows, err := gameDb.Query(query, Limit)
 	utils.Check(err)
@@ -156,18 +157,19 @@ func GameGetUserList(Limit int64) []model.GameUser {
 	return uList
 }
 
-//history
+// history.db
+
 func InsertUser(user model.User) int64 {
 	query := `
 		INSERT INTO users 
 		(
-			chat_id,
-			first_name,
-			last_name,
-			username,
-			step,
-			message_id,
-			question_id
+			"chat_id",
+			"first_name",
+			"last_name",
+			"username",
+			"step",
+			"message_id",
+			"question_id"
 		)
 		VALUES ($1, $2, $3, $4, $5, $6, $7)
 	`
@@ -188,9 +190,9 @@ func InsertUser(user model.User) int64 {
 
 	query = `
 		SELECT 
-			id 
+			"id" 
 		FROM users 
-		WHERE chat_id = $1
+		WHERE "chat_id" = $1
 	`
 	row := questionDb.QueryRow(query, user.ChatId)
 	err = row.Scan(&id)
@@ -203,13 +205,13 @@ func InsertUser(user model.User) int64 {
 func UpdateUser(user model.User) {
 	query := `
 		UPDATE users SET 
-			first_name = $1,
-			last_name = $2, 
-			username = $3,
-			step = $4, 
-			message_id = $5,
-			question_id = $6
-		WHERE chat_id = $7
+			"first_name" = $1,
+			"last_name" = $2, 
+			"username" = $3,
+			"step" = $4, 
+			"message_id" = $5,
+			"question_id" = $6
+		WHERE "chat_id" = $7
 	`
 
 	_, err := questionDb.Exec(
@@ -229,16 +231,15 @@ func UpdateUser(user model.User) {
 func GetUser(chatId int64) model.User {
 	query := `
 		SELECT 
-			id,
-			chat_id,
-			first_name,
-			last_name,
-			username,
-			step,
-			message_id,
-			question_id
-		FROM users WHERE chat_id = $1
-	`
+			"id",
+			"chat_id",
+			"first_name",
+			"last_name",
+			"username",
+			"step",
+			"message_id",
+			"question_id"
+		FROM users WHERE "chat_id" = $1`
 
 	row := questionDb.QueryRow(query, chatId)
 

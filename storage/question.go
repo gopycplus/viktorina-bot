@@ -5,17 +5,20 @@ import (
 	"github.com/shavkatjon/viktorina-bot/utils"
 )
 
-//game
+//game.db
+
 func GameGetQuestion(subject string) model.GameQuestion {
 	query := `
 		SELECT 
-			id,
-			text,
-			image,
-			answer,
-			status
-		FROM question WHERE status = 1 and subject = $1 ORDER by RANDOM() LIMIT 1;
-	`
+			"id",
+			"text",
+			"image",
+			"answer",
+			"status"
+		FROM question 
+		WHERE "status" = 1 
+		  AND "subject" = $1 
+		ORDER BY RANDOM() LIMIT 1;`
 
 	row := questionDb.QueryRow(query, subject)
 
@@ -38,7 +41,9 @@ func GameGetNumberOfQuestions(subject string) int64 {
 	query := `
 		SELECT
 		count(*) 
-		FROM question WHERE status = 1 and subject = $	`
+		FROM question 
+		WHERE "status" = 1 
+		  AND "subject" = $1`
 
 	row := questionDb.QueryRow(query, subject)
 
@@ -53,31 +58,41 @@ func GameGetNumberOfQuestions(subject string) int64 {
 }
 
 func GameGetVariant(answer string, subject string) (list []string) {
-	rows, err := questionDb.Query("select answer from question where answer != $1 and subject=$2 order by random() limit 3", answer, subject)
+	query := `
+		SELECT 
+		    "answer" 
+		FROM question 
+		WHERE "answer" != $1 
+		    AND "subject" = $2 
+		ORDER BY RANDOM() LIMIT 3`
+
+	rows, err := questionDb.Query(query, answer, subject)
 	utils.Check(err)
+
 	var word string
 	for rows.Next() {
 		err := rows.Scan(&word)
 		utils.Check(err)
 		list = append(list, word)
 	}
+
 	return list
 }
 
-//history
+// history.db
+
 func InsertQuestion(question model.Question) int64 {
 	query := `
 		INSERT INTO question 
 		(
-			subject,
-			text,
-			image,
-			answer,
-			user_id,
-			status
+			"subject",
+			"text",
+			"image",
+			"answer",
+			"user_id",
+			"status"
 		)
-		VALUES ($1, $2, $3, $4, $5, $6)
-	`
+		VALUES ($1, $2, $3, $4, $5, $6)`
 
 	_, err := questionDb.Exec(
 		query,
@@ -94,11 +109,11 @@ func InsertQuestion(question model.Question) int64 {
 
 	query = `
 		SELECT 
-			id 
+			"id" 
 		FROM question 
-		WHERE status = 0
-		AND user_id = $1
-	`
+		WHERE "status" = 0
+		AND "user_id" = $1`
+
 	row := questionDb.QueryRow(query, question.UserId)
 	err = row.Scan(&id)
 	utils.Check(err)
@@ -109,14 +124,13 @@ func InsertQuestion(question model.Question) int64 {
 func UpdateQuestion(question model.Question) {
 	query := `
 		UPDATE question SET
-			text = $1,
-			image = $2,
-			answer = $3,
-			user_id = $4,
-			status = $5,
-			subject = $6
-		WHERE id = $7
-	`
+			"text" = $1,
+			"image" = $2,
+			"answer" = $3,
+			"user_id" = $4,
+			"status" = $5,
+			"subject" = $6
+		WHERE "id" = $7`
 
 	_, err := questionDb.Exec(
 		query,
@@ -134,9 +148,10 @@ func UpdateQuestion(question model.Question) {
 
 func DeleteQuestion(id int64, userId int64) bool {
 	query := `
-		DELETE FROM question
-		WHERE id = $1 and user_id = $2
-	`
+		DELETE 
+		FROM question
+		WHERE "id" = $1 
+		  AND "user_id" = $2`
 
 	_, err := questionDb.Exec(
 		query,
@@ -150,14 +165,14 @@ func DeleteQuestion(id int64, userId int64) bool {
 func GetQuestion(id int64) model.Question {
 	query := `
 		SELECT 
-			id,
-			subject,
-			text,
-			image,
-			answer,
-			user_id, 
-			status
-		FROM question WHERE id = $1
+			"id",
+			"subject",
+			"text",
+			"image",
+			"answer",
+			"user_id", 
+			"status"
+		FROM question WHERE "id" = $1
 	`
 
 	row := questionDb.QueryRow(query, id)
@@ -183,8 +198,8 @@ func IsQuestionExists(id int64) bool {
 	query := `
 		SELECT 
 			count(*)
-		FROM question WHERE id = $1
-	`
+		FROM question 
+		WHERE "id" = $1`
 
 	row := questionDb.QueryRow(query, id)
 
@@ -199,10 +214,11 @@ func IsQuestionExists(id int64) bool {
 
 func IsExists(id int64, user_id int64) bool {
 	query := `
-		SELECT 
+		SELECT
 			count(*)
-		FROM question WHERE id = $1 and user_id = $2
-	`
+		FROM question 
+		WHERE "id" = $1 
+		  AND "user_id" = $2`
 
 	row := questionDb.QueryRow(query, id, user_id)
 
@@ -216,23 +232,25 @@ func IsExists(id int64, user_id int64) bool {
 }
 
 func GetQuestionList(Limit int64, Page int64) model.QuestionList {
-	var qList model.QuestionList
-	var question model.Question
-	var count int64
+	var (
+		qList    model.QuestionList
+		question model.Question
+		count    int64
+	)
 
 	query := `
 		SELECT 
-			id,
-			subject,
-			text,
-			answer,
-			user_id, 
-			status
+			"id",
+			"subject",
+			"text",
+			"answer",
+			"user_id", 
+			"status"
 		FROM question
-		WHERE status = 1
-		ORDER BY id
-		LIMIT $1, $2
-	`
+		WHERE "status" = 1
+		ORDER BY "id"
+		LIMIT $1, $2`
+
 	rows, err := questionDb.Query(query, (Page-1)*10, Limit)
 	utils.Check(err)
 
@@ -242,7 +260,12 @@ func GetQuestionList(Limit int64, Page int64) model.QuestionList {
 		qList.List = append(qList.List, question)
 	}
 
-	query = `SELECT count(*) FROM question WHERE status = 1`
+	query = `
+		SELECT 
+		    count(*) 
+		FROM question 
+		WHERE "status" = 1`
+
 	err = questionDb.QueryRow(query).Scan(&count)
 	utils.Check(err)
 

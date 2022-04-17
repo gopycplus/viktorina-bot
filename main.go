@@ -32,7 +32,7 @@ var subject = tgbotapi.NewReplyKeyboard(
 )
 
 func main() {
-
+	// Buttons
 	var stop = tgbotapi.NewReplyKeyboard(
 		tgbotapi.NewKeyboardButtonRow(
 			tgbotapi.NewKeyboardButton("Viktorinani to'xtatish⏹️"),
@@ -50,41 +50,39 @@ func main() {
 	e := godotenv.Load()
 	utils.Check(e)
 
-	bot, err := tgbotapi.NewBotAPI(os.Getenv("TELEGRAM_TOKEN2"))
-	if err != nil {
-		log.Panic(err)
-	}
-
-	bot.Debug = true
-
-	log.Printf("Authorized  on account %s", bot.Self.UserName)
-
-	u := tgbotapi.NewUpdate(0)
-	u.Timeout = 60
-
+	// Connect to game database
 	dbConn := storage.ConnectGameDb()
 	if dbConn {
-		fmt.Println("Connected to db")
+		fmt.Println("Connected to game.db")
 	} else {
-		fmt.Println("Not connected to db")
+		fmt.Println("Not connected to game.db")
 	}
 
 	// Connect to history database
 	dbConn = storage.ConnectHistoryDb()
 	if dbConn {
-		fmt.Println("Connected to db")
+		fmt.Println("Connected to history.db")
 	} else {
-		fmt.Println("Not connected to db")
+		fmt.Println("Not connected to history.db")
 	}
 
 	go HistoryBot()
 
-	_, err = bot.RemoveWebhook()
-	if err != nil {
-		panic(err)
-	}
+	bot, err := tgbotapi.NewBotAPI(os.Getenv("TELEGRAM_TOKEN2"))
+	utils.Check(err)
 
+	bot.Debug = true
+
+	log.Printf("Authorized  on account %s", bot.Self.UserName)
+
+	// Localniy run qilish uchun pastdagi 4 ta qatorni kommmentdan chiqarish kerak
+
+	u := tgbotapi.NewUpdate(0)
+	u.Timeout = 60
 	updates, _ := bot.GetUpdatesChan(u)
+
+	// Herokuda run qilish uchun pastdagi 4 ta qatorni kommentdan chiqarish kerak
+
 	// _, err = bot.SetWebhook(tgbotapi.NewWebhook("https://tarixviktorinabot.herokuapp.com/" + bot.Token))
 	// utils.Check(err)
 	// updates := bot.ListenForWebhook("/" + bot.Token)
@@ -92,13 +90,14 @@ func main() {
 
 	for update := range updates {
 		if update.CallbackQuery != nil {
-
 			user := storage.GameGetUser(update.CallbackQuery.Message.Chat.ID)
-
 			callbackQueryDataSplit := strings.Split(update.CallbackQuery.Data, "#")
 
 			switch user.Step {
 			case 4:
+				_, err := bot.DeleteMessage(tgbotapi.DeleteMessageConfig{ChatID: user.ChatId, MessageID: int(user.MessageId)})
+				utils.Check(err)
+
 				switch callbackQueryDataSplit[0] {
 				case "correct":
 					congratsMsg := tgbotapi.NewMessage(user.ChatId, "")
@@ -135,17 +134,20 @@ func main() {
 							msg.ReplyMarkup = utils.BuildInline(&user, variants)
 						}
 
-						bot.Send(msg)
-						response.Body.Close()
+						m, _ := bot.Send(msg)
+						user.MessageId = int64(m.MessageID)
+
+						err := response.Body.Close()
+						utils.Check(err)
 					} else {
 						msg := tgbotapi.NewMessage(user.ChatId, "")
 						msg.ParseMode = "html"
 
 						msg.Text = "<b>Keyingi savol:\n</b> " + user.Question + "\n<b>Sizning javobingiz:</b>"
 						msg.ReplyMarkup = stop
-						user.Step++
 
-						bot.Send((msg))
+						m, _ := bot.Send(msg)
+						user.MessageId = int64(m.MessageID)
 					}
 				case "wrong":
 					congratsMsg := tgbotapi.NewMessage(user.ChatId, "")
@@ -181,20 +183,24 @@ func main() {
 							msg.ReplyMarkup = utils.BuildInline(&user, variants)
 						}
 
-						bot.Send(msg)
-						response.Body.Close()
+						m, _ := bot.Send(msg)
+						user.MessageId = int64(m.MessageID)
+
+						err := response.Body.Close()
+						utils.Check(err)
 					} else {
 						msg := tgbotapi.NewMessage(user.ChatId, "")
 						msg.ParseMode = "html"
 
 						msg.Text = "<b>Keyingi savol:\n</b> " + user.Question + "\n<b>Sizning javobingiz:</b>"
 						msg.ReplyMarkup = stop
-						user.Step++
 
-						bot.Send((msg))
+						m, _ := bot.Send(msg)
+						user.MessageId = int64(m.MessageID)
 					}
 				}
 			}
+			storage.GameUpdateUser(user)
 		}
 
 		if update.Message == nil {
@@ -212,49 +218,48 @@ func main() {
 
 			msg := tgbotapi.NewMessage(user.ChatId,
 				"Assalomu Alaykum, "+user.FirstName+" "+user.LastName+"!\nViktorina botga xush kelibsiz!")
-			msg.ReplyMarkup = groupMenuKeyboard
-			m, _ := bot.Send(msg)
 
-			user.MessageId = int64(m.MessageID)
-			storage.GameUpdateUser(user)
-		case 2:
-			var m tgbotapi.Message
-			msg := tgbotapi.NewMessage(user.ChatId, "")
 			msg.ParseMode = "html"
 			msg.ReplyMarkup = groupMenuKeyboard
-			switch update.Message.Text {
-			case "Reyting🔝":
-				userList := storage.GameGetUserList(10)
-				user.Step = 2
 
-				fmt.Println(userList)
-				msg.Text = utils.GameListToText(userList)
-				m, _ = bot.Send(msg)
-				msg.Text = "<i><b>Sizning profilingiz</b></i>:\n<b>Ism:</b> " + user.FirstName + "\n<b>Familiya:</b> " + user.LastName + "\n<b>Siz to'plagan ballar:</b> " + strconv.Itoa(user.Score)
-			case "Viktorinani boshlash🧩":
-				msg := tgbotapi.NewMessage(user.ChatId, "")
-				msg.ParseMode = "html"
-				msg.Text = "Qaysi fandan viktorinani boshlamoqchisiz?"
-				msg.ReplyMarkup = subject
-				user.Step++
-				bot.Send((msg))
-				user.MessageId = int64(m.MessageID)
-				storage.GameUpdateUser(user)
+			m, _ := bot.Send(msg)
+			user.MessageId = int64(m.MessageID)
+		case 2:
+			switch update.Message.Text {
 			case "Profil📊":
 				msg := tgbotapi.NewMessage(user.ChatId,
 					"<i><b>Sizning profilingiz</b></i>:\n<b>Ism:</b> "+user.FirstName+"\n<b>Familiya:</b> "+user.LastName+"\n<b>Siz to'plagan ballar:</b> "+strconv.Itoa(user.Score))
 				msg.ParseMode = "html"
-				bot.Send((msg))
-			default:
-				msg := tgbotapi.NewMessage(user.ChatId, "Bunday buyruq yo'q🙃")
 				msg.ReplyMarkup = groupMenuKeyboard
-				user.Step = 2
+
 				m, _ := bot.Send(msg)
 				user.MessageId = int64(m.MessageID)
-				storage.GameUpdateUser(user)
+			case "Reyting🔝":
+				userList := storage.GameGetUserList(10)
+
+				msg := tgbotapi.NewMessage(user.ChatId, utils.GameListToText(userList))
+				msg.ParseMode = "html"
+				msg.ReplyMarkup = groupMenuKeyboard
+
+				m, _ := bot.Send(msg)
+				user.MessageId = int64(m.MessageID)
+			case "Viktorinani boshlash🧩":
+				user.Step++
+
+				msg := tgbotapi.NewMessage(user.ChatId, "Qaysi fandan viktorinani boshlamoqchisiz?")
+				msg.ParseMode = "html"
+				msg.ReplyMarkup = subject
+
+				m, _ := bot.Send(msg)
+				user.MessageId = int64(m.MessageID)
+			default:
+				msg := tgbotapi.NewMessage(user.ChatId, "Bunday buyruq yo'q🙃")
+				msg.ParseMode = "html"
+				msg.ReplyMarkup = groupMenuKeyboard
+
+				m, _ := bot.Send(msg)
+				user.MessageId = int64(m.MessageID)
 			}
-			user.MessageId = int64(m.MessageID)
-			storage.GameUpdateUser(user)
 		case 3:
 			switch update.Message.Text {
 			case "Matematika🧮":
@@ -299,8 +304,12 @@ func main() {
 
 						user.Step++
 					}
-					bot.Send(msg)
-					response.Body.Close()
+
+					m, _ := bot.Send(msg)
+					user.MessageId = int64(m.MessageID)
+
+					err := response.Body.Close()
+					utils.Check(err)
 				} else {
 					msg := tgbotapi.NewMessage(user.ChatId, "")
 					msg.ParseMode = "html"
@@ -313,7 +322,9 @@ func main() {
 						msg.ReplyMarkup = stop
 						user.Step++
 					}
-					bot.Send((msg))
+
+					m, _ := bot.Send(msg)
+					user.MessageId = int64(m.MessageID)
 				}
 			case "Tarix⏳":
 				user.Subject = "history"
@@ -357,8 +368,11 @@ func main() {
 
 						user.Step++
 					}
-					bot.Send(msg)
-					response.Body.Close()
+					m, _ := bot.Send(msg)
+					user.MessageId = int64(m.MessageID)
+
+					err := response.Body.Close()
+					utils.Check(err)
 				} else {
 					msg := tgbotapi.NewMessage(user.ChatId, "")
 					msg.ParseMode = "html"
@@ -371,7 +385,9 @@ func main() {
 						msg.ReplyMarkup = stop
 						user.Step++
 					}
-					bot.Send((msg))
+
+					m, _ := bot.Send(msg)
+					user.MessageId = int64(m.MessageID)
 				}
 			case "Ingliz tili🇬🇧":
 				user.Subject = "english"
@@ -415,8 +431,12 @@ func main() {
 
 						user.Step++
 					}
-					bot.Send(msg)
-					response.Body.Close()
+
+					m, _ := bot.Send(msg)
+					user.MessageId = int64(m.MessageID)
+
+					err := response.Body.Close()
+					utils.Check(err)
 				} else {
 					msg := tgbotapi.NewMessage(user.ChatId, "")
 					msg.ParseMode = "html"
@@ -429,7 +449,9 @@ func main() {
 						msg.ReplyMarkup = stop
 						user.Step++
 					}
-					bot.Send((msg))
+
+					m, _ := bot.Send(msg)
+					user.MessageId = int64(m.MessageID)
 				}
 			case "Rus tili🇷🇺":
 				user.Subject = "russian"
@@ -473,8 +495,12 @@ func main() {
 
 						user.Step++
 					}
-					bot.Send(msg)
-					response.Body.Close()
+
+					m, _ := bot.Send(msg)
+					user.MessageId = int64(m.MessageID)
+
+					err := response.Body.Close()
+					utils.Check(err)
 				} else {
 					msg := tgbotapi.NewMessage(user.ChatId, "")
 					msg.ParseMode = "html"
@@ -487,7 +513,9 @@ func main() {
 						msg.ReplyMarkup = stop
 						user.Step++
 					}
-					bot.Send((msg))
+
+					m, _ := bot.Send(msg)
+					user.MessageId = int64(m.MessageID)
 				}
 			case "Geografiya🗺":
 				user.Subject = "geography"
@@ -531,8 +559,12 @@ func main() {
 
 						user.Step++
 					}
-					bot.Send(msg)
-					response.Body.Close()
+
+					m, _ := bot.Send(msg)
+					user.MessageId = int64(m.MessageID)
+
+					err := response.Body.Close()
+					utils.Check(err)
 				} else {
 					msg := tgbotapi.NewMessage(user.ChatId, "")
 					msg.ParseMode = "html"
@@ -545,7 +577,9 @@ func main() {
 						msg.ReplyMarkup = stop
 						user.Step++
 					}
-					bot.Send((msg))
+
+					m, _ := bot.Send(msg)
+					user.MessageId = int64(m.MessageID)
 				}
 			case "Adabiyot🪶":
 				user.Subject = "literature"
@@ -589,8 +623,12 @@ func main() {
 
 						user.Step++
 					}
-					bot.Send(msg)
-					response.Body.Close()
+
+					m, _ := bot.Send(msg)
+					user.MessageId = int64(m.MessageID)
+
+					err := response.Body.Close()
+					utils.Check(err)
 				} else {
 					msg := tgbotapi.NewMessage(user.ChatId, "")
 					msg.ParseMode = "html"
@@ -603,7 +641,9 @@ func main() {
 						msg.ReplyMarkup = stop
 						user.Step++
 					}
-					bot.Send((msg))
+
+					m, _ := bot.Send(msg)
+					user.MessageId = int64(m.MessageID)
 				}
 			default:
 				msg := tgbotapi.NewMessage(user.ChatId, "")
@@ -611,19 +651,24 @@ func main() {
 				msg.Text = "Bunday fan yo'q🙃"
 				msg.ReplyMarkup = groupMenuKeyboard
 				user.Step = 2
-				bot.Send((msg))
+				m, _ := bot.Send(msg)
+				user.MessageId = int64(m.MessageID)
 			}
 			storage.GameUpdateUser(user)
 		case 4:
 			switch strings.ToLower(update.Message.Text) {
 			case "viktorinani to'xtatish⏹️":
+				user.Step = 2
+
 				msg := tgbotapi.NewMessage(user.ChatId, "Viktorina to'xtatildi")
 				msg.ReplyMarkup = groupMenuKeyboard
-				user.Step = 2
+
 				m, _ := bot.Send(msg)
 				user.MessageId = int64(m.MessageID)
-				storage.GameUpdateUser(user)
 			default:
+				_, err := bot.DeleteMessage(tgbotapi.DeleteMessageConfig{ChatID: user.ChatId, MessageID: int(user.MessageId)})
+				utils.Check(err)
+
 				if strings.EqualFold(strings.ToLower(update.Message.Text), strings.ToLower(user.Answer)) {
 					congratsMsg := tgbotapi.NewMessage(user.ChatId, "")
 					congratsMsg.ParseMode = "html"
@@ -666,26 +711,30 @@ func main() {
 						msg.ReplyMarkup = utils.BuildInline(&user, variants)
 					}
 
-					bot.Send(msg)
-					response.Body.Close()
+					m, _ := bot.Send(msg)
+					user.MessageId = int64(m.MessageID)
+
+					err := response.Body.Close()
+					utils.Check(err)
 				} else {
 					msg := tgbotapi.NewMessage(user.ChatId, "")
 					msg.ParseMode = "html"
 
 					msg.Text = "<b>Keyingi savol:\n</b> " + user.Question + "\n<b>Sizning javobingiz:</b>"
 					msg.ReplyMarkup = stop
-					user.Step++
 
-					bot.Send((msg))
+					m, _ := bot.Send(msg)
+					user.MessageId = int64(m.MessageID)
 				}
 			}
 		default:
+			user.Step = 2
+
 			msg := tgbotapi.NewMessage(user.ChatId, "Bunday buyruq yo'q🙃")
 			msg.ReplyMarkup = groupMenuKeyboard
-			user.Step = 2
+
 			m, _ := bot.Send(msg)
 			user.MessageId = int64(m.MessageID)
-			storage.GameUpdateUser(user)
 		}
 		storage.GameUpdateUser(user)
 	}
@@ -716,14 +765,9 @@ func HistoryBot() {
 	utils.Check(err)
 
 	bot.Debug = true
-	fmt.Println("Authorized   on account", bot.Self.UserName)
+	log.Printf("Authorized  on account %s", bot.Self.UserName)
 
 	// Localniy run qilish uchun pastdagi 4 ta qatorni kommmentdan chiqarish kerak
-
-	_, err = bot.RemoveWebhook()
-	if err != nil {
-		panic(err)
-	}
 
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60
@@ -739,7 +783,6 @@ func HistoryBot() {
 	for update := range updates {
 		if update.CallbackQuery != nil {
 			user := storage.GetUser(int64(update.CallbackQuery.From.ID))
-
 			callbackQueryDataSplit := strings.Split(update.CallbackQuery.Data, "#")
 
 			switch user.Step {
@@ -839,7 +882,7 @@ func HistoryBot() {
 				msg := tgbotapi.NewMessage(user.ChatId, "")
 				msg.ParseMode = "html"
 				msg.ReplyMarkup = tgbotapi.NewRemoveKeyboard(true)
-				fmt.Println(update.CallbackQuery.Data)
+
 				switch callbackQueryDataSplit[0] {
 				case "yes":
 					msg.Text = "Savolingiz uchun rasm jo'nating:"
@@ -849,13 +892,12 @@ func HistoryBot() {
 					msg.Text = "Savolingizning javobini kiriting:"
 					user.Step++
 					msg.ReplyMarkup = tgbotapi.NewRemoveKeyboard(true)
-					bot.Send((msg))
+					bot.Send(msg)
 				}
 				m, _ := bot.Send(msg)
 				user.MessageId = int64(m.MessageID)
 				storage.UpdateUser(user)
 			}
-
 		}
 
 		if update.Message == nil {
@@ -953,13 +995,16 @@ func HistoryBot() {
 				msg.ParseMode = "html"
 				msg.Text = "Bunday fan yo'q🙃"
 				msg.ReplyMarkup = defaultMenuKeyboard
+
+				m, _ := bot.Send(msg)
 				user.Step = 2
-				bot.Send((msg))
+				user.MessageId = int64(m.MessageID)
 				storage.UpdateUser(user)
 				continue
 			}
 			question.UserId = user.Id
 			user.QuestionId = storage.InsertQuestion(question)
+
 			m, _ := bot.Send(msg)
 			user.MessageId = int64(m.MessageID)
 			storage.UpdateUser(user)
@@ -989,7 +1034,7 @@ func HistoryBot() {
 			var question model.Question
 			question = storage.GetQuestion(user.QuestionId)
 			if update.Message.Photo != nil {
-				url, err := bot.GetFileDirectURL((*update.Message.Photo)[len((*update.Message.Photo))-1].FileID)
+				url, err := bot.GetFileDirectURL((*update.Message.Photo)[len(*update.Message.Photo)-1].FileID)
 				if err == nil {
 					question.Image = url
 				} else {
