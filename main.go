@@ -75,21 +75,21 @@ func main() {
 
 	// Localniy run qilish uchun pastdagi 4 ta qatorni kommmentdan chiqarish kerak
 
-	_, err = bot.RemoveWebhook()
-	u := tgbotapi.NewUpdate(0)
-	u.Timeout = 60
-	updates, _ := bot.GetUpdatesChan(u)
-
-	// Herokuda run qilish uchun pastdagi 4 ta qatorni kommentdan chiqarish kerak bo'ladi
-
 	//_, err = bot.RemoveWebhook()
-	//_, err = bot.SetWebhook(tgbotapi.NewWebhook("https://pmviktorinabot.herokuapp.com/" + bot.Token))
-	//utils.Check(err)
-	//updates := bot.ListenForWebhook("/" + bot.Token)
-	//go func() {
-	//	err := http.ListenAndServe(":"+os.Getenv("PORT"), nil)
-	//	utils.Check(err)
-	//}()
+	//u := tgbotapi.NewUpdate(0)
+	//u.Timeout = 60
+	//updates, _ := bot.GetUpdatesChan(u)
+
+	// Herokuda run qilish uchun pastdagi 8 ta qatorni kommentdan chiqarish kerak bo'ladi
+
+	_, err = bot.RemoveWebhook()
+	_, err = bot.SetWebhook(tgbotapi.NewWebhook("https://pmviktorinabot.herokuapp.com/" + bot.Token))
+	utils.Check(err)
+	updates := bot.ListenForWebhook("/" + bot.Token)
+	go func() {
+		err := http.ListenAndServe(":"+os.Getenv("PORT"), nil)
+		utils.Check(err)
+	}()
 
 	for update := range updates {
 		if update.CallbackQuery != nil {
@@ -503,21 +503,21 @@ func HistoryBot() {
 
 	// Localniy run qilish uchun pastdagi 4 ta qatorni kommmentdan chiqarish kerak
 
-	_, err = bot.RemoveWebhook()
-	u := tgbotapi.NewUpdate(0)
-	u.Timeout = 60
-	updates, _ := bot.GetUpdatesChan(u)
+	//_, err = bot.RemoveWebhook()
+	//u := tgbotapi.NewUpdate(0)
+	//u.Timeout = 60
+	//updates, _ := bot.GetUpdatesChan(u)
 
 	// Herokuda run qilish uchun pastdagi 8 ta qatorni kommentdan chiqarish kerak
 
-	//_, err = bot.RemoveWebhook()
-	//_, err = bot.SetWebhook(tgbotapi.NewWebhook("https://pmviktorinabot.herokuapp.com/" + bot.Token))
-	//utils.Check(err)
-	//updates := bot.ListenForWebhook("/" + bot.Token)
-	//go func() {
-	//	err := http.ListenAndServe(":"+os.Getenv("PORT"), nil)
-	//	utils.Check(err)
-	//}()
+	_, err = bot.RemoveWebhook()
+	_, err = bot.SetWebhook(tgbotapi.NewWebhook("https://pmviktorinabot.herokuapp.com/" + bot.Token))
+	utils.Check(err)
+	updates := bot.ListenForWebhook("/" + bot.Token)
+	go func() {
+		err := http.ListenAndServe(":"+os.Getenv("PORT"), nil)
+		utils.Check(err)
+	}()
 
 	for update := range updates {
 		if update.CallbackQuery != nil {
