@@ -660,7 +660,7 @@ func HistoryBot() {
 
 			msgToAdmin := tgbotapi.NewMessage(738151092, "")
 			msgToAdmin.ParseMode = "html"
-			msgToAdmin.Text = "Admin botga kirgan foydalanuvchi: " + user.FirstName + " " + user.LastName + "\nusername: @" + user.UserName
+			msgToAdmin.Text = "Admin botga kirgan foydalanuvchi:  " + user.FirstName + " " + user.LastName + "\nusername: @" + user.UserName
 			_, err := bot.Send(msgToAdmin)
 			utils.Check(err)
 
