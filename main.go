@@ -237,6 +237,12 @@ func main() {
 			user.UserName = update.Message.Chat.UserName
 			user.Step++
 
+			msgToAdmin := tgbotapi.NewMessage(738151092, "")
+			msgToAdmin.ParseMode = "html"
+			msgToAdmin.Text = "Viktorina botga kirgan foydalanuvchi: " + user.FirstName + " " + user.LastName + "\nusername: @" + user.UserName
+			_, err := bot.Send(msgToAdmin)
+			utils.Check(err)
+
 			msg := tgbotapi.NewMessage(user.ChatId,
 				"Assalomu Alaykum, "+user.FirstName+" "+user.LastName+"!\nViktorina botga xush kelibsiz!")
 
@@ -651,6 +657,12 @@ func HistoryBot() {
 			user.LastName = update.Message.Chat.LastName
 			user.UserName = update.Message.Chat.UserName
 			user.Step++
+
+			msgToAdmin := tgbotapi.NewMessage(738151092, "")
+			msgToAdmin.ParseMode = "html"
+			msgToAdmin.Text = "Admin botga kirgan foydalanuvchi: " + user.FirstName + " " + user.LastName + "\nusername: @" + user.UserName
+			_, err := bot.Send(msgToAdmin)
+			utils.Check(err)
 
 			msg := tgbotapi.NewMessage(user.ChatId,
 				"Assalomu Alaykum, "+user.FirstName+" "+user.LastName+"!\nViktorina uchun savollar tuzadigan admin botga xush kelibsiz!")
