@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	_ "github.com/mattn/go-sqlite3"
-	model "github.com/shavkatjon/viktorina-bot/model"
-	utils "github.com/shavkatjon/viktorina-bot/utils"
+	"github.com/shavkatjon/viktorina-bot/model"
+	"github.com/shavkatjon/viktorina-bot/utils"
 )
 
 // game.db
@@ -20,9 +20,12 @@ func GameInsertUser(user model.GameUser) int64 {
 			"username",
 			"step", 
 			"message_id",
-			"score"
+			"score",
+			"subject",
+		 	"question",
+		 	"answer"
 		)
-		VALUES ($1, $2, $3, $4, $5, $6, $7)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 	`
 
 	_, err := gameDb.Exec(
@@ -34,6 +37,9 @@ func GameInsertUser(user model.GameUser) int64 {
 		user.Step,
 		user.MessageId,
 		user.Score,
+		user.Subject,
+		user.Question,
+		user.Answer,
 	)
 	utils.Check(err)
 
@@ -157,7 +163,7 @@ func GameGetUserList(Limit int64) []model.GameUser {
 	return uList
 }
 
-// history.db
+// qa.db
 
 func InsertUser(user model.User) int64 {
 	query := `
@@ -169,9 +175,10 @@ func InsertUser(user model.User) int64 {
 			"username",
 			"step",
 			"message_id",
-			"question_id"
+			"question_id",
+		 	"subject"
 		)
-		VALUES ($1, $2, $3, $4, $5, $6, $7)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 	`
 
 	_, err := questionDb.Exec(
@@ -183,6 +190,7 @@ func InsertUser(user model.User) int64 {
 		user.Step,
 		user.MessageId,
 		user.QuestionId,
+		user.Subject,
 	)
 	utils.Check(err)
 
@@ -210,8 +218,9 @@ func UpdateUser(user model.User) {
 			"username" = $3,
 			"step" = $4, 
 			"message_id" = $5,
-			"question_id" = $6
-		WHERE "chat_id" = $7
+			"question_id" = $6,
+			"subject" = $7
+		WHERE "chat_id" = $8
 	`
 
 	_, err := questionDb.Exec(
@@ -222,6 +231,7 @@ func UpdateUser(user model.User) {
 		user.Step,
 		user.MessageId,
 		user.QuestionId,
+		user.Subject,
 		user.ChatId,
 	)
 
@@ -238,7 +248,8 @@ func GetUser(chatId int64) model.User {
 			"username",
 			"step",
 			"message_id",
-			"question_id"
+			"question_id",
+			"subject"
 		FROM users WHERE "chat_id" = $1`
 
 	row := questionDb.QueryRow(query, chatId)
@@ -254,6 +265,7 @@ func GetUser(chatId int64) model.User {
 		&user.Step,
 		&user.MessageId,
 		&user.QuestionId,
+		&user.Subject,
 	)
 
 	if err != nil {

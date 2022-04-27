@@ -18,16 +18,14 @@ import (
 	"github.com/shavkatjon/viktorina-bot/utils"
 )
 
-var subject = tgbotapi.NewReplyKeyboard(
+var subjectKeyboard = tgbotapi.NewReplyKeyboard(
 	tgbotapi.NewKeyboardButtonRow(
-		tgbotapi.NewKeyboardButton("Matematika🧮"),
-		tgbotapi.NewKeyboardButton("Tarix⏳"),
-		tgbotapi.NewKeyboardButton("Ingliz tili🇬🇧"),
+		tgbotapi.NewKeyboardButton("Matematika"),
+		tgbotapi.NewKeyboardButton("Fizika"),
 	),
 	tgbotapi.NewKeyboardButtonRow(
-		tgbotapi.NewKeyboardButton("Rus tili🇷🇺"),
-		tgbotapi.NewKeyboardButton("Geografiya🗺"),
-		tgbotapi.NewKeyboardButton("Adabiyot🪶"),
+		tgbotapi.NewKeyboardButton("Kimyo"),
+		tgbotapi.NewKeyboardButton("Biologiya"),
 	),
 )
 
@@ -77,17 +75,21 @@ func main() {
 
 	// Localniy run qilish uchun pastdagi 4 ta qatorni kommmentdan chiqarish kerak
 
-	//u := tgbotapi.NewUpdate(0)
-	//u.Timeout = 60
-	//updates, _ := bot.GetUpdatesChan(u)
+	_, err = bot.RemoveWebhook()
+	u := tgbotapi.NewUpdate(0)
+	u.Timeout = 60
+	updates, _ := bot.GetUpdatesChan(u)
 
 	// Herokuda run qilish uchun pastdagi 4 ta qatorni kommentdan chiqarish kerak bo'ladi
 
-	_, err = bot.RemoveWebhook()
-	_, err = bot.SetWebhook(tgbotapi.NewWebhook("https://pmviktorinabot.herokuapp.com/" + bot.Token))
-	utils.Check(err)
-	updates := bot.ListenForWebhook("/" + bot.Token)
-	go http.ListenAndServe(":"+os.Getenv("PORT"), nil)
+	//_, err = bot.RemoveWebhook()
+	//_, err = bot.SetWebhook(tgbotapi.NewWebhook("https://pmviktorinabot.herokuapp.com/" + bot.Token))
+	//utils.Check(err)
+	//updates := bot.ListenForWebhook("/" + bot.Token)
+	//go func() {
+	//	err := http.ListenAndServe(":"+os.Getenv("PORT"), nil)
+	//	utils.Check(err)
+	//}()
 
 	for update := range updates {
 		if update.CallbackQuery != nil {
@@ -105,7 +107,8 @@ func main() {
 					congratsMsg.ParseMode = "html"
 					congratsMsg.ReplyMarkup = stop
 					congratsMsg.Text = "Javobingiz to'g'ri😃"
-					bot.Send(congratsMsg)
+					_, err = bot.Send(congratsMsg)
+					utils.Check(err)
 					user.Score++
 
 					question := storage.GameGetQuestion(user.Subject)
@@ -120,18 +123,18 @@ func main() {
 							Name:  "picture",
 							Bytes: b,
 						}
+
 						msg := tgbotapi.NewPhotoUpload(user.ChatId, file)
 						msg.ParseMode = "html"
 						rand.Seed(time.Now().UnixNano())
 						randomType := rand.Intn(2)
 
 						if randomType == 1 {
-							msg.Caption = "<b>Keyingi savol:\n</b> " + user.Question + "\n<b>Sizning javobingiz:</b>"
+							msg.Caption = "<b>Savol:</b> " + user.Question + "\n\n<b>Javobni kiriting:</b>"
 						} else {
-							msg.Caption = "<b>Keyingi savol:\n</b> " + user.Question + "\n<b>Javobni tanlang:</b>"
+							variants := []string{question.Variant1, question.Variant2, question.Variant3}
 
-							variants := storage.GameGetVariant(user.Answer, user.Subject)
-
+							msg.Caption = "<b>Savol:</b> " + user.Question + "\n\n<b>Javobni tanlang:</b>"
 							msg.ReplyMarkup = utils.BuildInline(&user, variants)
 						}
 
@@ -143,9 +146,17 @@ func main() {
 					} else {
 						msg := tgbotapi.NewMessage(user.ChatId, "")
 						msg.ParseMode = "html"
+						rand.Seed(time.Now().UnixNano())
+						randomType := rand.Intn(2)
 
-						msg.Text = "<b>Keyingi savol:\n</b> " + user.Question + "\n<b>Sizning javobingiz:</b>"
-						msg.ReplyMarkup = stop
+						if randomType == 1 {
+							msg.Text = "<b>Savol:</b> " + user.Question + "\n\n<b>Javobni kiriting:</b>"
+						} else {
+							variants := []string{question.Variant1, question.Variant2, question.Variant3}
+
+							msg.Text = "<b>Savol:</b> " + user.Question + "\n\n<b>Javobni tanlang:</b>"
+							msg.ReplyMarkup = utils.BuildInline(&user, variants)
+						}
 
 						m, _ := bot.Send(msg)
 						user.MessageId = int64(m.MessageID)
@@ -154,8 +165,9 @@ func main() {
 					congratsMsg := tgbotapi.NewMessage(user.ChatId, "")
 					congratsMsg.ParseMode = "html"
 					congratsMsg.ReplyMarkup = stop
-					congratsMsg.Text = "Javobingiz noto'g'ri🙁\nTo'g'ri javob: <b>" + user.Answer + "</b>"
-					bot.Send(congratsMsg)
+					congratsMsg.Text = "Javobingiz noto'g'ri🙁\n\nTo'g'ri javob: <b>" + user.Answer + "</b>"
+					_, err = bot.Send(congratsMsg)
+					utils.Check(err)
 
 					question := storage.GameGetQuestion(user.Subject)
 					user.Question = question.Text
@@ -169,18 +181,18 @@ func main() {
 							Name:  "picture",
 							Bytes: b,
 						}
+
 						msg := tgbotapi.NewPhotoUpload(user.ChatId, file)
 						msg.ParseMode = "html"
 						rand.Seed(time.Now().UnixNano())
 						randomType := rand.Intn(2)
 
 						if randomType == 1 {
-							msg.Caption = "<b>Keyingi savol:\n</b> " + user.Question + "\n<b>Sizning javobingiz:</b>"
+							msg.Caption = "<b>Savol:</b> " + user.Question + "\n\n<b>Javobni kiriting:</b>"
 						} else {
-							msg.Caption = "<b>Keyingi savol:\n</b> " + user.Question + "\n<b>Javobni tanlang:</b>"
+							variants := []string{question.Variant1, question.Variant2, question.Variant3}
 
-							variants := storage.GameGetVariant(user.Answer, user.Subject)
-
+							msg.Caption = "<b>Savol:</b> " + user.Question + "\n\n<b>Javobni tanlang:</b>"
 							msg.ReplyMarkup = utils.BuildInline(&user, variants)
 						}
 
@@ -192,9 +204,17 @@ func main() {
 					} else {
 						msg := tgbotapi.NewMessage(user.ChatId, "")
 						msg.ParseMode = "html"
+						rand.Seed(time.Now().UnixNano())
+						randomType := rand.Intn(2)
 
-						msg.Text = "<b>Keyingi savol:\n</b> " + user.Question + "\n<b>Sizning javobingiz:</b>"
-						msg.ReplyMarkup = stop
+						if randomType == 1 {
+							msg.Text = "<b>Savol:</b> " + user.Question + "\n\n<b>Javobni kiriting:</b>"
+						} else {
+							variants := []string{question.Variant1, question.Variant2, question.Variant3}
+
+							msg.Text = "<b>Savol:</b> " + user.Question + "\n\n<b>Javobni tanlang:</b>"
+							msg.ReplyMarkup = utils.BuildInline(&user, variants)
+						}
 
 						m, _ := bot.Send(msg)
 						user.MessageId = int64(m.MessageID)
@@ -249,7 +269,7 @@ func main() {
 
 				msg := tgbotapi.NewMessage(user.ChatId, "Qaysi fandan viktorinani boshlamoqchisiz?")
 				msg.ParseMode = "html"
-				msg.ReplyMarkup = subject
+				msg.ReplyMarkup = subjectKeyboard
 
 				m, _ := bot.Send(msg)
 				user.MessageId = int64(m.MessageID)
@@ -263,399 +283,104 @@ func main() {
 			}
 		case 3:
 			switch update.Message.Text {
-			case "Matematika🧮":
+			case "Matematika":
 				user.Subject = "math"
-				question := storage.GameGetQuestion(user.Subject)
-				user.Question = question.Text
-				user.Answer = question.Answer
-
-				if question.Image != "" {
-					response, _ := http.Get(question.Image)
-
-					b, _ := io.ReadAll(response.Body)
-					file := tgbotapi.FileBytes{
-						Name:  "picture",
-						Bytes: b,
-					}
-					msg := tgbotapi.NewPhotoUpload(user.ChatId, file)
-					msg.ParseMode = "html"
-					if storage.GameGetNumberOfQuestions("math") == 0 {
-						msg.Caption = "Bu fan bo'yicha savollar hali qo'shilmagan."
-						msg.ReplyMarkup = groupMenuKeyboard
-						user.Step = 2
-					} else {
-
-						startMsg := tgbotapi.NewMessage(user.ChatId, "<b>Viktorina boshlandi!!!</b>")
-						startMsg.ParseMode = "html"
-						startMsg.ReplyMarkup = stop
-						bot.Send(startMsg)
-
-						rand.Seed(time.Now().UnixNano())
-						randomType := rand.Intn(2)
-
-						if randomType == 1 {
-							msg.Caption = "<b>Savol:</b> " + user.Question + "\n<b>Sizning javobingiz:</b>"
-						} else {
-							msg.Caption = "<b>Savol:</b> " + user.Question + "\n<b>Javobni tanlang:</b>"
-
-							variants := storage.GameGetVariant(user.Answer, user.Subject)
-
-							msg.ReplyMarkup = utils.BuildInline(&user, variants)
-						}
-
-						user.Step++
-					}
-
-					m, _ := bot.Send(msg)
-					user.MessageId = int64(m.MessageID)
-
-					err := response.Body.Close()
-					utils.Check(err)
-				} else {
-					msg := tgbotapi.NewMessage(user.ChatId, "")
-					msg.ParseMode = "html"
-					if storage.GameGetNumberOfQuestions("math") == 0 {
-						msg.Text = "Bu fan bo'yicha savollar hali qo'shilmagan."
-						msg.ReplyMarkup = groupMenuKeyboard
-						user.Step = 2
-					} else {
-						msg.Text = "<b>Viktorina boshlandi!!!</b>\n<b>Savol:</b> " + user.Question + "\n<b>Sizning javobingiz:</b>"
-						msg.ReplyMarkup = stop
-						user.Step++
-					}
-
-					m, _ := bot.Send(msg)
-					user.MessageId = int64(m.MessageID)
-				}
-			case "Tarix⏳":
-				user.Subject = "history"
-				question := storage.GameGetQuestion(user.Subject)
-				user.Question = question.Text
-				user.Answer = question.Answer
-
-				if question.Image != "" {
-					response, _ := http.Get(question.Image)
-
-					b, _ := io.ReadAll(response.Body)
-					file := tgbotapi.FileBytes{
-						Name:  "picture",
-						Bytes: b,
-					}
-					msg := tgbotapi.NewPhotoUpload(user.ChatId, file)
-					msg.ParseMode = "html"
-					if storage.GameGetNumberOfQuestions("histoy") == 0 {
-						msg.Caption = "Bu fan bo'yicha savollar hali qo'shilmagan."
-						msg.ReplyMarkup = groupMenuKeyboard
-						user.Step = 2
-					} else {
-
-						startMsg := tgbotapi.NewMessage(user.ChatId, "<b>Viktorina boshlandi!!!</b>")
-						startMsg.ParseMode = "html"
-						startMsg.ReplyMarkup = stop
-						bot.Send(startMsg)
-
-						rand.Seed(time.Now().UnixNano())
-						randomType := rand.Intn(2)
-
-						if randomType == 1 {
-							msg.Caption = "<b>Savol:</b> " + user.Question + "\n<b>Sizning javobingiz:</b>"
-						} else {
-							msg.Caption = "<b>Savol:</b> " + user.Question + "\n<b>Javobni tanlang:</b>"
-
-							variants := storage.GameGetVariant(user.Answer, user.Subject)
-
-							msg.ReplyMarkup = utils.BuildInline(&user, variants)
-						}
-
-						user.Step++
-					}
-					m, _ := bot.Send(msg)
-					user.MessageId = int64(m.MessageID)
-
-					err := response.Body.Close()
-					utils.Check(err)
-				} else {
-					msg := tgbotapi.NewMessage(user.ChatId, "")
-					msg.ParseMode = "html"
-					if storage.GameGetNumberOfQuestions("history") == 0 {
-						msg.Text = "Bu fan bo'yicha savollar hali qo'shilmagan."
-						msg.ReplyMarkup = groupMenuKeyboard
-						user.Step = 2
-					} else {
-						msg.Text = "<b>Viktorina boshlandi!!!</b>\n<b>Savol:</b> " + user.Question + "\n<b>Sizning javobingiz:</b>"
-						msg.ReplyMarkup = stop
-						user.Step++
-					}
-
-					m, _ := bot.Send(msg)
-					user.MessageId = int64(m.MessageID)
-				}
-			case "Ingliz tili🇬🇧":
-				user.Subject = "english"
-				question := storage.GameGetQuestion(user.Subject)
-				user.Question = question.Text
-				user.Answer = question.Answer
-
-				if question.Image != "" {
-					response, _ := http.Get(question.Image)
-
-					b, _ := io.ReadAll(response.Body)
-					file := tgbotapi.FileBytes{
-						Name:  "picture",
-						Bytes: b,
-					}
-					msg := tgbotapi.NewPhotoUpload(user.ChatId, file)
-					msg.ParseMode = "html"
-					if storage.GameGetNumberOfQuestions("english") == 0 {
-						msg.Caption = "Bu fan bo'yicha savollar hali qo'shilmagan."
-						msg.ReplyMarkup = groupMenuKeyboard
-						user.Step = 2
-					} else {
-
-						startMsg := tgbotapi.NewMessage(user.ChatId, "<b>Viktorina boshlandi!!!</b>")
-						startMsg.ParseMode = "html"
-						startMsg.ReplyMarkup = stop
-						bot.Send(startMsg)
-
-						rand.Seed(time.Now().UnixNano())
-						randomType := rand.Intn(2)
-
-						if randomType == 1 {
-							msg.Caption = "<b>Savol:</b> " + user.Question + "\n<b>Sizning javobingiz:</b>"
-						} else {
-							msg.Caption = "<b>Savol:</b> " + user.Question + "\n<b>Javobni tanlang:</b>"
-
-							variants := storage.GameGetVariant(user.Answer, user.Subject)
-
-							msg.ReplyMarkup = utils.BuildInline(&user, variants)
-						}
-
-						user.Step++
-					}
-
-					m, _ := bot.Send(msg)
-					user.MessageId = int64(m.MessageID)
-
-					err := response.Body.Close()
-					utils.Check(err)
-				} else {
-					msg := tgbotapi.NewMessage(user.ChatId, "")
-					msg.ParseMode = "html"
-					if storage.GameGetNumberOfQuestions("english") == 0 {
-						msg.Text = "Bu fan bo'yicha savollar hali qo'shilmagan."
-						msg.ReplyMarkup = groupMenuKeyboard
-						user.Step = 2
-					} else {
-						msg.Text = "<b>Viktorina boshlandi!!!</b>\n<b>Savol:</b> " + user.Question + "\n<b>Sizning javobingiz:</b>"
-						msg.ReplyMarkup = stop
-						user.Step++
-					}
-
-					m, _ := bot.Send(msg)
-					user.MessageId = int64(m.MessageID)
-				}
-			case "Rus tili🇷🇺":
-				user.Subject = "russian"
-				question := storage.GameGetQuestion(user.Subject)
-				user.Question = question.Text
-				user.Answer = question.Answer
-
-				if question.Image != "" {
-					response, _ := http.Get(question.Image)
-
-					b, _ := io.ReadAll(response.Body)
-					file := tgbotapi.FileBytes{
-						Name:  "picture",
-						Bytes: b,
-					}
-					msg := tgbotapi.NewPhotoUpload(user.ChatId, file)
-					msg.ParseMode = "html"
-					if storage.GameGetNumberOfQuestions("russian") == 0 {
-						msg.Caption = "Bu fan bo'yicha savollar hali qo'shilmagan."
-						msg.ReplyMarkup = groupMenuKeyboard
-						user.Step = 2
-					} else {
-
-						startMsg := tgbotapi.NewMessage(user.ChatId, "<b>Viktorina boshlandi!!!</b>")
-						startMsg.ParseMode = "html"
-						startMsg.ReplyMarkup = stop
-						bot.Send(startMsg)
-
-						rand.Seed(time.Now().UnixNano())
-						randomType := rand.Intn(2)
-
-						if randomType == 1 {
-							msg.Caption = "<b>Savol:</b> " + user.Question + "\n<b>Sizning javobingiz:</b>"
-						} else {
-							msg.Caption = "<b>Savol:</b> " + user.Question + "\n<b>Javobni tanlang:</b>"
-
-							variants := storage.GameGetVariant(user.Answer, user.Subject)
-
-							msg.ReplyMarkup = utils.BuildInline(&user, variants)
-						}
-
-						user.Step++
-					}
-
-					m, _ := bot.Send(msg)
-					user.MessageId = int64(m.MessageID)
-
-					err := response.Body.Close()
-					utils.Check(err)
-				} else {
-					msg := tgbotapi.NewMessage(user.ChatId, "")
-					msg.ParseMode = "html"
-					if storage.GameGetNumberOfQuestions("russian") == 0 {
-						msg.Text = "Bu fan bo'yicha savollar hali qo'shilmagan."
-						msg.ReplyMarkup = groupMenuKeyboard
-						user.Step = 2
-					} else {
-						msg.Text = "<b>Viktorina boshlandi!!!</b>\n<b>Savol:</b> " + user.Question + "\n<b>Sizning javobingiz:</b>"
-						msg.ReplyMarkup = stop
-						user.Step++
-					}
-
-					m, _ := bot.Send(msg)
-					user.MessageId = int64(m.MessageID)
-				}
-			case "Geografiya🗺":
-				user.Subject = "geography"
-				question := storage.GameGetQuestion(user.Subject)
-				user.Question = question.Text
-				user.Answer = question.Answer
-
-				if question.Image != "" {
-					response, _ := http.Get(question.Image)
-
-					b, _ := io.ReadAll(response.Body)
-					file := tgbotapi.FileBytes{
-						Name:  "picture",
-						Bytes: b,
-					}
-					msg := tgbotapi.NewPhotoUpload(user.ChatId, file)
-					msg.ParseMode = "html"
-					if storage.GameGetNumberOfQuestions("geography") == 0 {
-						msg.Caption = "Bu fan bo'yicha savollar hali qo'shilmagan."
-						msg.ReplyMarkup = groupMenuKeyboard
-						user.Step = 2
-					} else {
-
-						startMsg := tgbotapi.NewMessage(user.ChatId, "<b>Viktorina boshlandi!!!</b>")
-						startMsg.ParseMode = "html"
-						startMsg.ReplyMarkup = stop
-						bot.Send(startMsg)
-
-						rand.Seed(time.Now().UnixNano())
-						randomType := rand.Intn(2)
-
-						if randomType == 1 {
-							msg.Caption = "<b>Savol:</b> " + user.Question + "\n<b>Sizning javobingiz:</b>"
-						} else {
-							msg.Caption = "<b>Savol:</b> " + user.Question + "\n<b>Javobni tanlang:</b>"
-
-							variants := storage.GameGetVariant(user.Answer, user.Subject)
-
-							msg.ReplyMarkup = utils.BuildInline(&user, variants)
-						}
-
-						user.Step++
-					}
-
-					m, _ := bot.Send(msg)
-					user.MessageId = int64(m.MessageID)
-
-					err := response.Body.Close()
-					utils.Check(err)
-				} else {
-					msg := tgbotapi.NewMessage(user.ChatId, "")
-					msg.ParseMode = "html"
-					if storage.GameGetNumberOfQuestions("geography") == 0 {
-						msg.Text = "Bu fan bo'yicha savollar hali qo'shilmagan."
-						msg.ReplyMarkup = groupMenuKeyboard
-						user.Step = 2
-					} else {
-						msg.Text = "<b>Viktorina boshlandi!!!</b>\n<b>Savol:</b> " + user.Question + "\n<b>Sizning javobingiz:</b>"
-						msg.ReplyMarkup = stop
-						user.Step++
-					}
-
-					m, _ := bot.Send(msg)
-					user.MessageId = int64(m.MessageID)
-				}
-			case "Adabiyot🪶":
-				user.Subject = "literature"
-				question := storage.GameGetQuestion(user.Subject)
-				user.Question = question.Text
-				user.Answer = question.Answer
-
-				if question.Image != "" {
-					response, _ := http.Get(question.Image)
-
-					b, _ := io.ReadAll(response.Body)
-					file := tgbotapi.FileBytes{
-						Name:  "picture",
-						Bytes: b,
-					}
-					msg := tgbotapi.NewPhotoUpload(user.ChatId, file)
-					msg.ParseMode = "html"
-					if storage.GameGetNumberOfQuestions("literature") == 0 {
-						msg.Caption = "Bu fan bo'yicha savollar hali qo'shilmagan."
-						msg.ReplyMarkup = groupMenuKeyboard
-						user.Step = 2
-					} else {
-
-						startMsg := tgbotapi.NewMessage(user.ChatId, "<b>Viktorina boshlandi!!!</b>")
-						startMsg.ParseMode = "html"
-						startMsg.ReplyMarkup = stop
-						bot.Send(startMsg)
-
-						rand.Seed(time.Now().UnixNano())
-						randomType := rand.Intn(2)
-
-						if randomType == 1 {
-							msg.Caption = "<b>Savol:</b> " + user.Question + "\n<b>Sizning javobingiz:</b>"
-						} else {
-							msg.Caption = "<b>Savol:</b> " + user.Question + "\n<b>Javobni tanlang:</b>"
-
-							variants := storage.GameGetVariant(user.Answer, user.Subject)
-
-							msg.ReplyMarkup = utils.BuildInline(&user, variants)
-						}
-
-						user.Step++
-					}
-
-					m, _ := bot.Send(msg)
-					user.MessageId = int64(m.MessageID)
-
-					err := response.Body.Close()
-					utils.Check(err)
-				} else {
-					msg := tgbotapi.NewMessage(user.ChatId, "")
-					msg.ParseMode = "html"
-					if storage.GameGetNumberOfQuestions("literature") == 0 {
-						msg.Text = "Bu fan bo'yicha savollar hali qo'shilmagan."
-						msg.ReplyMarkup = groupMenuKeyboard
-						user.Step = 2
-					} else {
-						msg.Text = "<b>Viktorina boshlandi!!!</b>\n<b>Savol:</b> " + user.Question + "\n<b>Sizning javobingiz:</b>"
-						msg.ReplyMarkup = stop
-						user.Step++
-					}
-
-					m, _ := bot.Send(msg)
-					user.MessageId = int64(m.MessageID)
-				}
+			case "Fizika":
+				user.Subject = "physics"
+			case "Kimyo":
+				user.Subject = "chemistry"
+			case "Biologiya":
+				user.Subject = "biology"
 			default:
+				user.Step = 2
+				msg := tgbotapi.NewMessage(user.ChatId, "Bunday fan yo'q🙃")
+				msg.ParseMode = "html"
+				msg.ReplyMarkup = groupMenuKeyboard
+				m, _ := bot.Send(msg)
+				user.MessageId = int64(m.MessageID)
+				storage.GameUpdateUser(user)
+				continue
+			}
+
+			question := storage.GameGetQuestion(user.Subject)
+
+			if storage.GameGetNumberOfQuestions(user.Subject) == 0 {
+				user.Step = 2
+				msg := tgbotapi.NewMessage(user.ChatId, "Bu fan bo'yicha savollar hali qo'shilmagan.")
+				msg.ParseMode = "html"
+				msg.ReplyMarkup = groupMenuKeyboard
+				m, _ := bot.Send(msg)
+				user.MessageId = int64(m.MessageID)
+				storage.GameUpdateUser(user)
+				continue
+			}
+
+			user.Question = question.Text
+			user.Answer = question.Answer
+
+			if question.Image != "" {
+				response, _ := http.Get(question.Image)
+
+				b, _ := io.ReadAll(response.Body)
+				file := tgbotapi.FileBytes{
+					Name:  "picture",
+					Bytes: b,
+				}
+
+				msg := tgbotapi.NewPhotoUpload(user.ChatId, file)
+				msg.ParseMode = "html"
+				startMsg := tgbotapi.NewMessage(user.ChatId, "<b>Viktorina boshlandi!!!</b>")
+				startMsg.ParseMode = "html"
+				startMsg.ReplyMarkup = stop
+				_, err = bot.Send(startMsg)
+				utils.Check(err)
+
+				rand.Seed(time.Now().UnixNano())
+				randomType := rand.Intn(2)
+
+				if randomType == 1 {
+					msg.Caption = "<b>Savol:</b> " + user.Question + "\n\n<b>Javobni kiriting:</b>"
+				} else {
+					variants := []string{question.Variant1, question.Variant2, question.Variant3}
+
+					msg.Caption = "<b>Savol:</b> " + user.Question + "\n\n<b>Javobni tanlang:</b>"
+					msg.ReplyMarkup = utils.BuildInline(&user, variants)
+				}
+
+				user.Step++
+
+				m, _ := bot.Send(msg)
+				user.MessageId = int64(m.MessageID)
+
+				err := response.Body.Close()
+				utils.Check(err)
+			} else {
 				msg := tgbotapi.NewMessage(user.ChatId, "")
 				msg.ParseMode = "html"
-				msg.Text = "Bunday fan yo'q🙃"
-				msg.ReplyMarkup = groupMenuKeyboard
-				user.Step = 2
+
+				startMsg := tgbotapi.NewMessage(user.ChatId, "<b>Viktorina boshlandi!!!</b>")
+				startMsg.ParseMode = "html"
+				startMsg.ReplyMarkup = stop
+				_, err = bot.Send(startMsg)
+				utils.Check(err)
+
+				rand.Seed(time.Now().UnixNano())
+				randomType := rand.Intn(2)
+
+				if randomType == 1 {
+					msg.Text = "<b>Savol:</b> " + user.Question + "\n\n<b>Javobni kiriting:</b>"
+				} else {
+					variants := []string{question.Variant1, question.Variant2, question.Variant3}
+
+					msg.Text = "<b>Savol:</b> " + user.Question + "\n\n<b>Javobni tanlang:</b>"
+					msg.ReplyMarkup = utils.BuildInline(&user, variants)
+				}
+
+				user.Step++
+
 				m, _ := bot.Send(msg)
 				user.MessageId = int64(m.MessageID)
 			}
-			storage.GameUpdateUser(user)
 		case 4:
 			switch strings.ToLower(update.Message.Text) {
 			case "viktorinani to'xtatish⏹️":
@@ -671,18 +396,18 @@ func main() {
 				utils.Check(err)
 
 				if strings.EqualFold(strings.ToLower(update.Message.Text), strings.ToLower(user.Answer)) {
-					congratsMsg := tgbotapi.NewMessage(user.ChatId, "")
-					congratsMsg.ParseMode = "html"
-					congratsMsg.ReplyMarkup = stop
-					congratsMsg.Text = "Javobingiz to'g'ri😃"
-					bot.Send(congratsMsg)
 					user.Score++
-				} else {
-					congratsMsg := tgbotapi.NewMessage(user.ChatId, "")
+					congratsMsg := tgbotapi.NewMessage(user.ChatId, "Javobingiz to'g'ri😃")
 					congratsMsg.ParseMode = "html"
 					congratsMsg.ReplyMarkup = stop
-					congratsMsg.Text = "Javobingiz noto'g'ri🙁\nTo'g'ri javob: <b>" + user.Answer + "</b>"
-					bot.Send(congratsMsg)
+					_, err = bot.Send(congratsMsg)
+					utils.Check(err)
+				} else {
+					congratsMsg := tgbotapi.NewMessage(user.ChatId, "Javobingiz noto'g'ri🙁\n\nTo'g'ri javob: <b>"+user.Answer+"</b>")
+					congratsMsg.ParseMode = "html"
+					congratsMsg.ReplyMarkup = stop
+					_, err = bot.Send(congratsMsg)
+					utils.Check(err)
 				}
 
 				question := storage.GameGetQuestion(user.Subject)
@@ -697,18 +422,18 @@ func main() {
 						Name:  "picture",
 						Bytes: b,
 					}
+
 					msg := tgbotapi.NewPhotoUpload(user.ChatId, file)
 					msg.ParseMode = "html"
 					rand.Seed(time.Now().UnixNano())
 					randomType := rand.Intn(2)
 
 					if randomType == 1 {
-						msg.Caption = "<b>Keyingi savol:\n</b> " + user.Question + "\n<b>Sizning javobingiz:</b>"
+						msg.Caption = "<b>Savol:</b> " + user.Question + "\n\n<b>Javobni kiriting:</b>"
 					} else {
-						msg.Caption = "<b>Keyingi savol:\n</b> " + user.Question + "\n<b>Javobni tanlang:</b>"
+						variants := []string{question.Variant1, question.Variant2, question.Variant3}
 
-						variants := storage.GameGetVariant(user.Answer, user.Subject)
-
+						msg.Caption = "<b>Savol:</b> " + user.Question + "\n\n<b>Javobni tanlang:</b>"
 						msg.ReplyMarkup = utils.BuildInline(&user, variants)
 					}
 
@@ -720,9 +445,17 @@ func main() {
 				} else {
 					msg := tgbotapi.NewMessage(user.ChatId, "")
 					msg.ParseMode = "html"
+					rand.Seed(time.Now().UnixNano())
+					randomType := rand.Intn(2)
 
-					msg.Text = "<b>Keyingi savol:\n</b> " + user.Question + "\n<b>Sizning javobingiz:</b>"
-					msg.ReplyMarkup = stop
+					if randomType == 1 {
+						msg.Text = "<b>Savol:</b> " + user.Question + "\n\n<b>Javobni kiriting:</b>"
+					} else {
+						variants := []string{question.Variant1, question.Variant2, question.Variant3}
+
+						msg.Text = "<b>Savol:</b> " + user.Question + "\n\n<b>Javobni tanlang:</b>"
+						msg.ReplyMarkup = utils.BuildInline(&user, variants)
+					}
 
 					m, _ := bot.Send(msg)
 					user.MessageId = int64(m.MessageID)
@@ -753,7 +486,7 @@ func HistoryBot() {
 
 	editMenuKeyboard := tgbotapi.NewReplyKeyboard(
 		tgbotapi.NewKeyboardButtonRow(
-			tgbotapi.NewKeyboardButton("Savolni tahrirlash♻️"),
+			tgbotapi.NewKeyboardButton("Savolni tahrirlash♻"),
 			tgbotapi.NewKeyboardButton("Savolni o'chirish🗑"),
 		),
 	)
@@ -770,17 +503,21 @@ func HistoryBot() {
 
 	// Localniy run qilish uchun pastdagi 4 ta qatorni kommmentdan chiqarish kerak
 
-	//u := tgbotapi.NewUpdate(0)
-	//u.Timeout = 60
-	//updates, _ := bot.GetUpdatesChan(u)
-
-	// Herokuda run qilish uchun pastdagi 4 ta qatorni kommentdan chiqarish kerak
-
 	_, err = bot.RemoveWebhook()
-	_, err = bot.SetWebhook(tgbotapi.NewWebhook("https://pmviktorinabot.herokuapp.com/" + bot.Token))
-	utils.Check(err)
-	updates := bot.ListenForWebhook("/" + bot.Token)
-	go http.ListenAndServe(":"+os.Getenv("PORT"), nil)
+	u := tgbotapi.NewUpdate(0)
+	u.Timeout = 60
+	updates, _ := bot.GetUpdatesChan(u)
+
+	// Herokuda run qilish uchun pastdagi 8 ta qatorni kommentdan chiqarish kerak
+
+	//_, err = bot.RemoveWebhook()
+	//_, err = bot.SetWebhook(tgbotapi.NewWebhook("https://pmviktorinabot.herokuapp.com/" + bot.Token))
+	//utils.Check(err)
+	//updates := bot.ListenForWebhook("/" + bot.Token)
+	//go func() {
+	//	err := http.ListenAndServe(":"+os.Getenv("PORT"), nil)
+	//	utils.Check(err)
+	//}()
 
 	for update := range updates {
 		if update.CallbackQuery != nil {
@@ -792,17 +529,17 @@ func HistoryBot() {
 				switch callbackQueryDataSplit[0] {
 				case "next":
 					{
-						limit, err := strconv.Atoi(callbackQueryDataSplit[1])
-						utils.Check(err)
-						page, err := strconv.Atoi(callbackQueryDataSplit[2])
-						utils.Check(err)
+						var inlineKeyboard tgbotapi.InlineKeyboardMarkup
 
 						msg := tgbotapi.NewEditMessageText(user.ChatId, int(user.MessageId), "")
 						msg.ParseMode = "html"
 
-						var inlineKeyboard tgbotapi.InlineKeyboardMarkup
-						user.Step = 2
-						questionList := storage.GetQuestionList(int64(limit), int64(page))
+						limit, err := strconv.Atoi(callbackQueryDataSplit[1])
+						utils.Check(err)
+						page, err := strconv.Atoi(callbackQueryDataSplit[2])
+						utils.Check(err)
+						questionList := storage.GetQuestionList(user.Subject, int64(limit), int64(page))
+
 						if questionList.Page < questionList.PageCount && questionList.Page > 1 {
 							inlineKeyboard = tgbotapi.NewInlineKeyboardMarkup(
 								tgbotapi.NewInlineKeyboardRow(
@@ -831,22 +568,22 @@ func HistoryBot() {
 						}
 
 						msg.Text = utils.ListToText(questionList)
-						bot.Send(msg)
-						storage.UpdateUser(user)
+						_, err = bot.Send(msg)
+						utils.Check(err)
 					}
 				case "prev":
 					{
-						limit, err := strconv.Atoi(callbackQueryDataSplit[1])
-						utils.Check(err)
-						page, err := strconv.Atoi(callbackQueryDataSplit[2])
-						utils.Check(err)
+						var inlineKeyboard tgbotapi.InlineKeyboardMarkup
 
 						msg := tgbotapi.NewEditMessageText(user.ChatId, int(user.MessageId), "")
 						msg.ParseMode = "html"
 
-						var inlineKeyboard tgbotapi.InlineKeyboardMarkup
-						user.Step = 2
-						questionList := storage.GetQuestionList(int64(limit), int64(page))
+						limit, err := strconv.Atoi(callbackQueryDataSplit[1])
+						utils.Check(err)
+						page, err := strconv.Atoi(callbackQueryDataSplit[2])
+						utils.Check(err)
+						questionList := storage.GetQuestionList(user.Subject, int64(limit), int64(page))
+
 						if questionList.Page < questionList.PageCount && questionList.Page > 1 {
 							inlineKeyboard = tgbotapi.NewInlineKeyboardMarkup(
 								tgbotapi.NewInlineKeyboardRow(
@@ -875,11 +612,14 @@ func HistoryBot() {
 						}
 
 						msg.Text = utils.ListToText(questionList)
-						bot.Send(msg)
-						storage.UpdateUser(user)
+						_, err = bot.Send(msg)
+						utils.Check(err)
 					}
 				}
 			case 5:
+				_, err := bot.DeleteMessage(tgbotapi.DeleteMessageConfig{ChatID: user.ChatId, MessageID: int(user.MessageId)})
+				utils.Check(err)
+
 				user.Step++
 				msg := tgbotapi.NewMessage(user.ChatId, "")
 				msg.ParseMode = "html"
@@ -889,17 +629,14 @@ func HistoryBot() {
 				case "yes":
 					msg.Text = "Savolingiz uchun rasm jo'nating:"
 				default:
-					msg := tgbotapi.NewMessage(user.ChatId, "")
-					msg.ParseMode = "html"
-					msg.Text = "Savolingizning javobini kiriting:"
-					user.Step++
-					msg.ReplyMarkup = tgbotapi.NewRemoveKeyboard(true)
-					bot.Send(msg)
+					user.Step = 7
+					msg.Text = "Savolning tog'ri javobini kiriting:"
 				}
+
 				m, _ := bot.Send(msg)
 				user.MessageId = int64(m.MessageID)
-				storage.UpdateUser(user)
 			}
+			storage.UpdateUser(user)
 		}
 
 		if update.Message == nil {
@@ -923,7 +660,6 @@ func HistoryBot() {
 			m, _ := bot.Send(msg)
 
 			user.MessageId = int64(m.MessageID)
-			storage.UpdateUser(user)
 		case 2:
 			var m tgbotapi.Message
 			msg := tgbotapi.NewMessage(user.ChatId, "")
@@ -932,47 +668,46 @@ func HistoryBot() {
 			switch update.Message.Text {
 			case "Savollar to'plami📋":
 				{
-					var inlineKeyboard tgbotapi.InlineKeyboardMarkup
-					user.Step = 2
-					questionList := storage.GetQuestionList(10, 1)
-					if questionList.Page < questionList.PageCount {
-						inlineKeyboard = tgbotapi.NewInlineKeyboardMarkup(
-							tgbotapi.NewInlineKeyboardRow(
-								tgbotapi.NewInlineKeyboardButtonData(strconv.Itoa(int(questionList.Page))+"/"+strconv.Itoa(int(questionList.PageCount)), "page"),
-								tgbotapi.NewInlineKeyboardButtonData("Next", "next#"+strconv.Itoa(int(questionList.Limit))+"#"+strconv.Itoa(int(questionList.Page+1))),
-							),
-						)
-						msg.ReplyMarkup = inlineKeyboard
-					}
-
-					msg.Text = utils.ListToText(questionList)
+					user.Step = 100
+					msg.Text = "Fanni tanlang:"
+					msg.ReplyMarkup = subjectKeyboard
 					m, _ = bot.Send(msg)
 				}
 			case "Savol qo'shish📥":
 				{
 					user.Step++
-					msg.Text = "Kiritmoqchi bo'lgan savolingizning turini tanlang:"
-					msg.ReplyMarkup = subject
+					msg.Text = "Kiritmoqchi bo'lgan savolning fanini tanlang:"
+					msg.ReplyMarkup = subjectKeyboard
 					m, _ = bot.Send(msg)
-					storage.UpdateUser(user)
 				}
 			case "Savolni tahrirlash📝":
 				{
-					user.Step = 8
-					msg.Text = "Tahrirlamoqchi yoki o'chirmoqchi bo'lgan savolingizni indeksini kiriting:"
+					user.Step = 11
+					msg.Text = "Tahrirlamoqchi yoki o'chirmoqchi bo'lgan savolning indeksini kiriting:"
 					msg.ReplyMarkup = tgbotapi.NewRemoveKeyboard(true)
+					m, _ = bot.Send(msg)
+				}
+			case "/start":
+				{
+					user.FirstName = update.Message.Chat.FirstName
+					user.LastName = update.Message.Chat.LastName
+					user.UserName = update.Message.Chat.UserName
+					user.Step = 2
+
+					msg = tgbotapi.NewMessage(user.ChatId,
+						"Assalomu Alaykum, "+user.FirstName+" "+user.LastName+"!\nViktorina uchun savollar tuzadigan admin botga xush kelibsiz!")
+					msg.ReplyMarkup = defaultMenuKeyboard
 					m, _ = bot.Send(msg)
 				}
 			default:
 				{
-					msg = tgbotapi.NewMessage(user.ChatId, "Men bunday buyruqni bilmayman😕")
+					msg = tgbotapi.NewMessage(user.ChatId, "Bunday buyruq yo'q🙃")
 					msg.ReplyMarkup = defaultMenuKeyboard
 					m, _ = bot.Send(msg)
 				}
 			}
 
 			user.MessageId = int64(m.MessageID)
-			storage.UpdateUser(user)
 		case 3:
 			user.Step++
 			msg := tgbotapi.NewMessage(user.ChatId, "Yangi savolni kiriting:")
@@ -980,24 +715,17 @@ func HistoryBot() {
 			msg.ReplyMarkup = tgbotapi.NewRemoveKeyboard(true)
 			var question model.Question
 			switch update.Message.Text {
-			case "Matematika🧮":
+			case "Matematika":
 				question.Subject = "math"
-			case "Tarix⏳":
-				question.Subject = "history"
-			case "Ingliz tili🇬🇧":
-				question.Subject = "english"
-			case "Rus tili🇷🇺":
-				question.Subject = "russian"
-			case "Geografiya🗺":
-				question.Subject = "geography"
-			case "Adabiyot🪶":
-				question.Subject = "literature"
+			case "Fizika":
+				question.Subject = "physics"
+			case "Kimyo":
+				question.Subject = "chemistry"
+			case "Biologiya":
+				question.Subject = "biology"
 			default:
-				msg := tgbotapi.NewMessage(user.ChatId, "")
-				msg.ParseMode = "html"
 				msg.Text = "Bunday fan yo'q🙃"
 				msg.ReplyMarkup = defaultMenuKeyboard
-
 				m, _ := bot.Send(msg)
 				user.Step = 2
 				user.MessageId = int64(m.MessageID)
@@ -1009,10 +737,15 @@ func HistoryBot() {
 
 			m, _ := bot.Send(msg)
 			user.MessageId = int64(m.MessageID)
-			storage.UpdateUser(user)
 		case 4:
 			user.Step++
-			msg := tgbotapi.NewMessage(user.ChatId, "Savolingizda rasm qatnashganmi?")
+			var question model.Question
+			question = storage.GetQuestion(user.QuestionId)
+			question.Text = update.Message.Text
+			question.UserId = user.Id
+			storage.UpdateQuestion(question)
+
+			msg := tgbotapi.NewMessage(user.ChatId, "Savolda rasm qatnashganmi?")
 			inlineBTN := tgbotapi.NewInlineKeyboardMarkup(
 				tgbotapi.NewInlineKeyboardRow(
 					tgbotapi.NewInlineKeyboardButtonData("Ha", "yes"),
@@ -1021,18 +754,25 @@ func HistoryBot() {
 			)
 			msg.ReplyMarkup = inlineBTN
 			msg.ParseMode = "html"
-			var question model.Question
-			question = storage.GetQuestion(user.QuestionId)
-			question.Text = update.Message.Text
-			question.UserId = user.Id
-			storage.UpdateQuestion(question)
 			m, _ := bot.Send(msg)
 			user.MessageId = int64(m.MessageID)
-			storage.UpdateUser(user)
+		case 5:
+			_, err := bot.DeleteMessage(tgbotapi.DeleteMessageConfig{ChatID: user.ChatId, MessageID: int(user.MessageId)})
+			utils.Check(err)
+
+			msg := tgbotapi.NewMessage(user.ChatId, "Savolda rasm qatnashganmi?")
+			inlineBTN := tgbotapi.NewInlineKeyboardMarkup(
+				tgbotapi.NewInlineKeyboardRow(
+					tgbotapi.NewInlineKeyboardButtonData("Ha", "yes"),
+					tgbotapi.NewInlineKeyboardButtonData("Yo'q", "no"),
+				),
+			)
+			msg.ReplyMarkup = inlineBTN
+			msg.ParseMode = "html"
+			m, _ := bot.Send(msg)
+			user.MessageId = int64(m.MessageID)
 		case 6:
 			user.Step++
-			msg := tgbotapi.NewMessage(user.ChatId, "Savolingizning javobini kiriting:")
-			msg.ParseMode = "html"
 			var question model.Question
 			question = storage.GetQuestion(user.QuestionId)
 			if update.Message.Photo != nil {
@@ -1044,14 +784,48 @@ func HistoryBot() {
 				}
 			}
 			storage.UpdateQuestion(question)
+
+			msg := tgbotapi.NewMessage(user.ChatId, "Savolning tog'ri javobini kiriting:")
+			msg.ParseMode = "html"
 			m, _ := bot.Send(msg)
 			user.MessageId = int64(m.MessageID)
-			storage.UpdateUser(user)
-			storage.UpdateQuestion(question)
 		case 7:
+			user.Step++
 			var question model.Question
 			question = storage.GetQuestion(user.QuestionId)
 			question.Answer = update.Message.Text
+			storage.UpdateQuestion(question)
+
+			msg := tgbotapi.NewMessage(user.ChatId, "Javobning birinchi noto'g'ri variantini kitiring:")
+			msg.ParseMode = "html"
+			m, _ := bot.Send(msg)
+			user.MessageId = int64(m.MessageID)
+		case 8:
+			user.Step++
+			var question model.Question
+			question = storage.GetQuestion(user.QuestionId)
+			question.Variant1 = update.Message.Text
+			storage.UpdateQuestion(question)
+
+			msg := tgbotapi.NewMessage(user.ChatId, "Javobning ikkinchi noto'g'ri variantini kitiring:")
+			msg.ParseMode = "html"
+			m, _ := bot.Send(msg)
+			user.MessageId = int64(m.MessageID)
+		case 9:
+			user.Step++
+			var question model.Question
+			question = storage.GetQuestion(user.QuestionId)
+			question.Variant2 = update.Message.Text
+			storage.UpdateQuestion(question)
+
+			msg := tgbotapi.NewMessage(user.ChatId, "Javobning uchinchi noto'g'ri variantini kitiring:")
+			msg.ParseMode = "html"
+			m, _ := bot.Send(msg)
+			user.MessageId = int64(m.MessageID)
+		case 10:
+			var question model.Question
+			question = storage.GetQuestion(user.QuestionId)
+			question.Variant3 = update.Message.Text
 			question.Status = 1
 			storage.UpdateQuestion(question)
 
@@ -1059,38 +833,34 @@ func HistoryBot() {
 			msg.ParseMode = "html"
 			msg.ReplyMarkup = defaultMenuKeyboard
 			m, _ := bot.Send(msg)
-
-			user.Step = 2
 			user.MessageId = int64(m.MessageID)
-			storage.UpdateUser(user)
-			storage.UpdateQuestion(question)
-		case 8:
-			msg := tgbotapi.NewMessage(user.ChatId, "")
-			msg.ParseMode = "html"
-
+			user.Step = 2
+		case 11:
 			questionId, err := strconv.Atoi(update.Message.Text)
 			isQuestionExists := storage.IsQuestionExists(int64(questionId))
 
+			msg := tgbotapi.NewMessage(user.ChatId, "")
+			msg.ParseMode = "html"
+
 			if questionId == 0 || err != nil || !isQuestionExists {
+				user.Step = 2
 				msg.Text = "Siz notog'ri indeks kiritdingiz. Iltimos qayta harakat qilib ko'ring."
 				msg.ReplyMarkup = defaultMenuKeyboard
-				user.Step = 2
 			} else {
-				user.QuestionId = int64(questionId)
 				user.Step++
+				user.QuestionId = int64(questionId)
 				msg.Text = "Endi esa savolni o'chirish yoki tahrirlashni tanlang."
 				msg.ReplyMarkup = editMenuKeyboard
 			}
 
 			m, _ := bot.Send(msg)
 			user.MessageId = int64(m.MessageID)
-			storage.UpdateUser(user)
-		case 9:
+		case 12:
 			msg := tgbotapi.NewMessage(user.ChatId, "")
 			msg.ParseMode = "html"
 
 			switch update.Message.Text {
-			case "Savolni tahrirlash♻️":
+			case "Savolni tahrirlash♻":
 				{
 					user.Step++
 					msg.Text = "Yangi savolni kiriting:"
@@ -1104,30 +874,36 @@ func HistoryBot() {
 					if status && isExists {
 						msg.Text = strconv.Itoa(int(user.QuestionId)) + " indeksli savol muvaffaqiyatli o'chirildi!"
 					} else {
-						msg.Text = strconv.Itoa(int(user.QuestionId)) + " indeksli savolni o'chirishning imkoni bo'lmadi, qayta urinib ko'ring! (yuzaga kelishi mumkin bo'lgan muammolar: bunday indeksli savol mavjud bo'lmasligi mumkin yoki shu savolnining egasi boshqa.)"
+						msg.Text = strconv.Itoa(int(user.QuestionId)) + " indeksli savolni o'chirishning imkoni bo'lmadi, qayta urinib ko'ring! (yuzaga kelishi mumkin bo'lgan muammolar: bunday indeksli savol mavjud bo'lmasligi mumkin yoki shu savolnining muallifi siz emassiz.)"
 					}
 					msg.ReplyMarkup = defaultMenuKeyboard
 				}
+			default:
+				user.Step = 2
+				msg.Text = "Bunday buyruq yo'q🙃"
+				msg.ReplyMarkup = defaultMenuKeyboard
+				m, _ := bot.Send(msg)
+				user.MessageId = int64(m.MessageID)
+				storage.UpdateUser(user)
+				continue
 			}
 
 			m, _ := bot.Send(msg)
 			user.MessageId = int64(m.MessageID)
-
-			storage.UpdateUser(user)
-		case 10:
+		case 13:
 			user.Step++
-			msg := tgbotapi.NewMessage(user.ChatId, "Savolingizning javobini kiriting:")
-			msg.ParseMode = "html"
 			var question model.Question
 			question = storage.GetQuestion(user.QuestionId)
 			question.Text = update.Message.Text
-			question.Answer = ""
-			question.Status = 0
 			storage.UpdateQuestion(question)
+
+			msg := tgbotapi.NewMessage(user.ChatId, "Savolning to'g'ri javobini kiriting:")
+			msg.ParseMode = "html"
+			msg.ReplyMarkup = defaultMenuKeyboard
 			m, _ := bot.Send(msg)
 			user.MessageId = int64(m.MessageID)
-			storage.UpdateUser(user)
-		case 11:
+		case 14:
+			user.Step = 2
 			var question model.Question
 			question = storage.GetQuestion(user.QuestionId)
 			question.Answer = update.Message.Text
@@ -1138,17 +914,72 @@ func HistoryBot() {
 			msg.ParseMode = "html"
 			msg.ReplyMarkup = defaultMenuKeyboard
 			m, _ := bot.Send(msg)
-
-			user.Step = 2
 			user.MessageId = int64(m.MessageID)
-			storage.UpdateUser(user)
+		case 100:
+			user.Step = 2
+			msg := tgbotapi.NewMessage(user.ChatId, "")
+			msg.ParseMode = "html"
+			msg.ReplyMarkup = defaultMenuKeyboard
+
+			switch update.Message.Text {
+			case "Matematika":
+				user.Subject = "math"
+			case "Fizika":
+				user.Subject = "physics"
+			case "Kimyo":
+				user.Subject = "chemistry"
+			case "Biologiya":
+				user.Subject = "biology"
+			default:
+				msg.Text = "Bunday fan yo'q🙃"
+				msg.ReplyMarkup = defaultMenuKeyboard
+				m, _ := bot.Send(msg)
+				user.MessageId = int64(m.MessageID)
+				storage.UpdateUser(user)
+				continue
+			}
+
+			var inlineKeyboard tgbotapi.InlineKeyboardMarkup
+
+			questionList := storage.GetQuestionList(user.Subject, 10, 1)
+
+			if len(questionList.List) == 0 {
+				msg.Text = "Bu fan bo'yicha savollar hali qo'shilmagan!"
+				msg.ReplyMarkup = defaultMenuKeyboard
+				m, _ := bot.Send(msg)
+				user.MessageId = int64(m.MessageID)
+				storage.UpdateUser(user)
+				continue
+			}
+
+			// this is for default keyborad
+			{
+				msg.Text = user.Subject
+				msg.ReplyMarkup = defaultMenuKeyboard
+				_, err = bot.Send(msg)
+				utils.Check(err)
+			}
+
+			if questionList.Page < questionList.PageCount {
+				inlineKeyboard = tgbotapi.NewInlineKeyboardMarkup(
+					tgbotapi.NewInlineKeyboardRow(
+						tgbotapi.NewInlineKeyboardButtonData(strconv.Itoa(int(questionList.Page))+"/"+strconv.Itoa(int(questionList.PageCount)), "page"),
+						tgbotapi.NewInlineKeyboardButtonData("Next", "next#"+strconv.Itoa(int(questionList.Limit))+"#"+strconv.Itoa(int(questionList.Page+1))),
+					),
+				)
+				msg.ReplyMarkup = inlineKeyboard
+			}
+
+			msg.Text = utils.ListToText(questionList)
+			m, _ := bot.Send(msg)
+			user.MessageId = int64(m.MessageID)
 		default:
+			user.Step = 2
 			msg := tgbotapi.NewMessage(user.ChatId, "Bunday buyruq yo'q🙃")
 			msg.ParseMode = "html"
 			m, _ := bot.Send(msg)
-			user.Step = 2
 			user.MessageId = int64(m.MessageID)
-			storage.UpdateUser(user)
 		}
+		storage.UpdateUser(user)
 	}
 }

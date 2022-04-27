@@ -12,7 +12,7 @@ func GameListToText(uList []model.GameUser) string {
 	for i, user := range uList {
 		text += "<b>" + strconv.Itoa(i+1) + " - o'rin:</b>" + "\n"
 		text += " <b>O'yinchi: </b>" + user.FirstName + " " + user.LastName + "\n"
-		text += " <b>O'yinchining bali: </b> " + strconv.Itoa(int(user.Score)) + "\n"
+		text += " <b>O'yinchining bali: </b> " + strconv.Itoa(user.Score) + "\n"
 	}
 
 	return text

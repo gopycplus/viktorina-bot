@@ -1,11 +1,11 @@
 package storage
 
 import (
-	model "github.com/shavkatjon/viktorina-bot/model"
+	"github.com/shavkatjon/viktorina-bot/model"
 	"github.com/shavkatjon/viktorina-bot/utils"
 )
 
-//game.db
+// game.db
 
 func GameGetQuestion(subject string) model.GameQuestion {
 	query := `
@@ -14,7 +14,11 @@ func GameGetQuestion(subject string) model.GameQuestion {
 			"text",
 			"image",
 			"answer",
-			"status"
+			"status",
+			"subject",
+			"variant1",
+			"variant2",
+			"variant3"
 		FROM question 
 		WHERE "status" = 1 
 		  AND "subject" = $1 
@@ -30,6 +34,10 @@ func GameGetQuestion(subject string) model.GameQuestion {
 		&question.Image,
 		&question.Answer,
 		&question.Status,
+		&question.Subject,
+		&question.Variant1,
+		&question.Variant2,
+		&question.Variant3,
 	)
 
 	utils.Check(err)
@@ -57,29 +65,7 @@ func GameGetNumberOfQuestions(subject string) int64 {
 	return count
 }
 
-func GameGetVariant(answer string, subject string) (list []string) {
-	query := `
-		SELECT 
-		    "answer" 
-		FROM question 
-		WHERE "answer" != $1 
-		    AND "subject" = $2 
-		ORDER BY RANDOM() LIMIT 3`
-
-	rows, err := questionDb.Query(query, answer, subject)
-	utils.Check(err)
-
-	var word string
-	for rows.Next() {
-		err := rows.Scan(&word)
-		utils.Check(err)
-		list = append(list, word)
-	}
-
-	return list
-}
-
-// history.db
+// qa.db
 
 func InsertQuestion(question model.Question) int64 {
 	query := `
@@ -90,9 +76,12 @@ func InsertQuestion(question model.Question) int64 {
 			"image",
 			"answer",
 			"user_id",
-			"status"
+			"status", 
+		 	"variant1",
+		 	"variant2",
+		 	"variant3"
 		)
-		VALUES ($1, $2, $3, $4, $5, $6)`
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`
 
 	_, err := questionDb.Exec(
 		query,
@@ -102,6 +91,9 @@ func InsertQuestion(question model.Question) int64 {
 		question.Answer,
 		question.UserId,
 		question.Status,
+		question.Variant1,
+		question.Variant2,
+		question.Variant3,
 	)
 	utils.Check(err)
 
@@ -129,8 +121,11 @@ func UpdateQuestion(question model.Question) {
 			"answer" = $3,
 			"user_id" = $4,
 			"status" = $5,
-			"subject" = $6
-		WHERE "id" = $7`
+			"subject" = $6,
+			"variant1" = $7,
+			"variant2" = $8,
+			"variant3" = $9
+		WHERE "id" = $10`
 
 	_, err := questionDb.Exec(
 		query,
@@ -140,6 +135,9 @@ func UpdateQuestion(question model.Question) {
 		question.UserId,
 		question.Status,
 		question.Subject,
+		question.Variant1,
+		question.Variant2,
+		question.Variant3,
 		question.Id,
 	)
 
@@ -171,7 +169,10 @@ func GetQuestion(id int64) model.Question {
 			"image",
 			"answer",
 			"user_id", 
-			"status"
+			"status",
+			"variant1",
+			"variant2",
+			"variant3"
 		FROM question WHERE "id" = $1
 	`
 
@@ -187,6 +188,9 @@ func GetQuestion(id int64) model.Question {
 		&question.Answer,
 		&question.UserId,
 		&question.Status,
+		&question.Variant1,
+		&question.Variant2,
+		&question.Variant3,
 	)
 
 	utils.Check(err)
@@ -212,7 +216,7 @@ func IsQuestionExists(id int64) bool {
 	return true
 }
 
-func IsExists(id int64, user_id int64) bool {
+func IsExists(id int64, userId int64) bool {
 	query := `
 		SELECT
 			count(*)
@@ -220,7 +224,7 @@ func IsExists(id int64, user_id int64) bool {
 		WHERE "id" = $1 
 		  AND "user_id" = $2`
 
-	row := questionDb.QueryRow(query, id, user_id)
+	row := questionDb.QueryRow(query, id, userId)
 
 	var count int
 	err := row.Scan(&count)
@@ -231,7 +235,7 @@ func IsExists(id int64, user_id int64) bool {
 	return true
 }
 
-func GetQuestionList(Limit int64, Page int64) model.QuestionList {
+func GetQuestionList(subject string, limit int64, page int64) model.QuestionList {
 	var (
 		qList    model.QuestionList
 		question model.Question
@@ -243,19 +247,17 @@ func GetQuestionList(Limit int64, Page int64) model.QuestionList {
 			"id",
 			"subject",
 			"text",
-			"answer",
-			"user_id", 
-			"status"
+			"answer"
 		FROM question
-		WHERE "status" = 1
+		WHERE "status" = 1 AND "subject" = $1
 		ORDER BY "id"
-		LIMIT $1, $2`
+		LIMIT $2, $3`
 
-	rows, err := questionDb.Query(query, (Page-1)*10, Limit)
+	rows, err := questionDb.Query(query, subject, (page-1)*10, limit)
 	utils.Check(err)
 
 	for rows.Next() {
-		err := rows.Scan(&question.Id, &question.Subject, &question.Text, &question.Answer, &question.UserId, &question.Status)
+		err := rows.Scan(&question.Id, &question.Subject, &question.Text, &question.Answer)
 		utils.Check(err)
 		qList.List = append(qList.List, question)
 	}
@@ -269,11 +271,11 @@ func GetQuestionList(Limit int64, Page int64) model.QuestionList {
 	err = questionDb.QueryRow(query).Scan(&count)
 	utils.Check(err)
 
-	qList.Limit = Limit
-	qList.Page = Page
+	qList.Limit = limit
+	qList.Page = page
 	qList.Count = count
-	qList.PageCount = count / Limit
-	if count%Limit > 0 {
+	qList.PageCount = count / limit
+	if count%limit > 0 {
 		qList.PageCount++
 	}
 
